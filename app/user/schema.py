@@ -1,5 +1,5 @@
 import graphene
-from app.graphql.utils import DjangoPkInterface, Meta, Operations
+from app.graphql.utils import DjangoPkInterface, Operations
 from app.user.forms import UserCreationForm
 from django.conf import settings
 from django.contrib.auth import get_user_model, forms
@@ -48,21 +48,17 @@ class UserNode(DjangoObjectType):
         return self.enquiries.filter(is_submitted=True).all()
 
 
-class UserMeta(Meta):
-    # @TODO find a way to inherit Input fields
-    fields = {
-        'email': graphene.String(required=True),
-        'password': graphene.String(required=True)
-    }
+class UserInput:
+    email = graphene.String(required=True)
+    password = graphene.String(required=True)
 
 
 class CreateUser(Operations.MutationCreate, graphene.relay.ClientIDMutation):
     form = UserCreationForm
     node = graphene.Field(UserNode)
 
-    class Input:
-        email = graphene.String(required=True)
-        password = graphene.String(required=True)
+    class Input(UserInput):
+        pass
 
     @classmethod
     def after_save(cls, input: dict, context: WSGIRequest, form: UserCreationForm) -> Operations.MutationCreate:

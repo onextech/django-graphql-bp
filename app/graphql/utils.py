@@ -149,18 +149,6 @@ class SearchConnectionField(DjangoFilterConnectionField):
         return filterset_class(data=filter_kwargs, queryset=default_manager.get_queryset()).qs
 
 
-class Meta(type):
-    fields = {}
-
-    def __new__(mcs, what: str, bases=None, dict=None):
-        """
-        :type bases: tuple[type] | None
-        :type dict: dict | None
-        """
-        dict.update(mcs.fields)
-        return type.__new__(mcs, what, bases, dict)
-
-
 class Operations:
     FORBIDDEN_ACCESS_ERROR = '403 Forbidden Access'
     UNAUTHORIZED_ERROR = '401 Unauthorized'
