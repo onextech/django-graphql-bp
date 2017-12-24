@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'app.graphql',
+    'app.user',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -122,3 +124,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# Test email of the next structure: TEST_EMAIL_USERNAME@TEST_EMAIL_DOMAIN
+TEST_EMAIL_USERNAME = os.environ.get('TEST_EMAIL_USERNAME')
+TEST_EMAIL_DOMAIN = os.environ.get('TEST_EMAIL_DOMAIN')
+
+
+# Path to root directory of the project
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
