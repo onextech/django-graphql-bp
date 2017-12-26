@@ -130,6 +130,5 @@ STATIC_URL = '/static/'
 TEST_EMAIL_USERNAME = os.environ.get('TEST_EMAIL_USERNAME')
 TEST_EMAIL_DOMAIN = os.environ.get('TEST_EMAIL_DOMAIN')
 
-
 # Path to root directory of the project
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

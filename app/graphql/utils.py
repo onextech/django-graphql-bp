@@ -323,7 +323,7 @@ class Operations:
             cls.validate_required_attribute('model', models.Model)
 
         @classmethod
-        def get_instance(cls, input: dict, context: WSGIRequest) -> models.Model:
+        def get_instance(cls, info: ResolveInfo, input: dict) -> models.Model:
             return cls.model.objects.get(pk=input.get('pk'))
 
     class MutationDelete(MutationAbstract):
@@ -337,34 +337,31 @@ class Operations:
             cls.validate_required_attribute(attribute='model', base_type=models.Model)
 
         @classmethod
-        def get_instance(cls, input: dict, context: WSGIRequest) -> models.Model:
+        def get_instance(cls, info: ResolveInfo, input: dict) -> models.Model:
             return cls.model.objects.get(pk=input.get('pk'))
 
         @classmethod
-        def after_delete(cls, input: dict, context: WSGIRequest, instance: models.Model):
+        def after_delete(cls, info: ResolveInfo, input: dict, instance: models.Model):
             """
             :rtype: Operations.MutationDelete
             """
             return cls(ok=True, pk=input.get('pk'), node=instance)
 
         @classmethod
-        def delete(cls, input: dict, context: WSGIRequest, instance: models.Model):
+        def delete(cls, info: ResolveInfo, input: dict, instance: models.Model):
             instance.delete()
 
         @classmethod
-        def mutate_and_get_payload(cls, input: dict, context: WSGIRequest, info: ResolveInfo):
-            """
-            :rtype: Operations.MutationDelete
-            """
-            super(Operations.MutationDelete, cls).mutate_and_get_payload(input, context, info)
-            instance = cls.get_instance(input, context)
-            cls.delete(input, context, instance)
-            return cls.after_delete(input, context, instance)
+        def mutate_and_get_payload(cls, root, info: ResolveInfo, **input: dict) -> 'Operations.MutationDelete':
+            super(Operations.MutationDelete, cls).mutate_and_get_payload(root, info, **input)
+            instance = cls.get_instance(info, input)
+            cls.delete(info, input, instance)
+            return cls.after_delete(info, input, instance)
 
     class MutationSoftDelete(MutationDelete):
         is_deleted_attribute = 'is_deleted'
 
         @classmethod
-        def delete(cls, input: dict, context: WSGIRequest, instance: models.Model):
+        def delete(cls, info: ResolveInfo, input: dict, instance: models.Model):
             setattr(instance, cls.is_deleted_attribute, True)
             instance.save()

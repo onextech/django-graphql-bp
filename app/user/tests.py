@@ -1,18 +1,36 @@
 from app.graphql.tests import GraphqlTestCase, Mutation, Query
-from app.graphql.api import schema
 from django.contrib.auth.models import User
-from graphene.test import Client
 
 
 class SchemaTestCase(GraphqlTestCase):
     def setUp(self):
         super(SchemaTestCase, self).setUp()
+        self.user = self.create_test_user('user', {'username': 'user'})
+        self.user2 = self.create_test_user('user2', {'username': 'user2'})
+        self.staff = self.create_test_user('staff', {'username': 'staff'})
+        self.staff.is_staff = True
+        self.staff.save()
 
     def get_create_user_mutation(self) -> Mutation:
-        return Mutation('createUser', {'ok': ''}, {
-            'email': self.get_user_email('get_create_user_mutation'),
-            'password': 'get_create_user_mutation'
+        return Mutation('createUser', {'ok': '', 'validationErrors': ''}, {
+            'email': self.get_user_email('createUser'),
+            'password1': 'get_create_user_mutation',
+            'password2': 'get_create_user_mutation'
         })
+
+    def get_update_user_mutation(self) -> Mutation:
+        return Mutation('updateUser', {'ok': '', 'validationErrors': ''}, {
+            'pk': self.user.pk,
+            'firstName': 'get_create_user_mutation'
+        })
+
+    def get_delete_user_mutation(self) -> Mutation:
+        return Mutation('deleteUser', {
+            'ok': '',
+            'node': {
+                'isActive': ''
+            }
+        }, {'pk': self.user.pk})
 
     def get_current_user_query(self) -> Query:
         return Query('currentUser', {
@@ -35,9 +53,40 @@ class SchemaTestCase(GraphqlTestCase):
 
     # test createUser migration
     def test_create_user(self):
-        count = User.objects.count()
-        mutation = self.get_create_user_mutation()
-        result = Client(schema).execute(
-            mutation.get_result(), context_value=self.get_context_value())
-        self.assert_mutation_success(result, mutation.get_name())
-        self.assertEqual(User.objects.count(), count + 1, 'Check if user has been created')
+        self.create_mutation_success_test(User, self.get_create_user_mutation())
+
+    # test updateUser migration
+    def test_update_user_by_unauthorized_user(self):
+        self.update_mutation_raised_error_test(
+            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_unauthorized_message())
+
+    def test_update_user_by_not_owner(self):
+        self.update_mutation_raised_error_test(
+            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_forbidden_access_message(),
+            self.get_context_value(self.user2))
+
+    def test_update_user_by_owner(self):
+        self.update_mutation_success_test(
+            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_context_value(self.user))
+
+    def test_update_user_by_staff(self):
+        self.update_mutation_success_test(
+            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_context_value(self.staff))
+
+    # test deleteUser migration
+    def test_delete_user_by_unauthorized_user(self):
+        self.update_mutation_raised_error_test(
+            User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_unauthorized_message())
+
+    def test_delete_user_by_not_owner(self):
+        self.update_mutation_raised_error_test(
+            User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_forbidden_access_message(),
+            self.get_context_value(self.user2))
+
+    def test_delete_user_by_owner(self):
+        self.update_mutation_success_test(
+            User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_context_value(self.user))
+    
+    def test_delete_user_by_staff(self):
+        self.update_mutation_success_test(
+            User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_context_value(self.staff))

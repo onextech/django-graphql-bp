@@ -1,8 +1,6 @@
 import graphene
 from app.graphql.utils import DjangoPkInterface, Operations
-from app.user.forms import UserCreationForm
-from django.conf import settings
-from django.contrib.auth import get_user_model, forms
+from app.user.forms import CreateUserForm, UpdateUserForm
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from graphene_django import DjangoObjectType
@@ -12,58 +10,84 @@ from graphql.execution.base import ResolveInfo
 
 class UserNode(DjangoObjectType):
     class Meta:
-        model = get_user_model()
+        model = User
         interfaces = (graphene.relay.Node, DjangoPkInterface)
         filter_fields = ['email', 'is_active']
 
+
+class UserAccess(Operations.MutationAccess):
     @classmethod
-    def get_node(cls, id, context, info):
-        """
-        To prevent confidential user information from being
-        queried externally. Only the user or an admin can
-        make queries on a user node.
-        """
-        user = super(UserNode, cls).get_node(id, context, info)
-        if (context.user.id and user.id == context.user.id) or context.user.is_staff:
-            return user
-        else:
-            return None
+    def get_model_from_input(cls, info: ResolveInfo, input: dict) -> User:
+        return User.objects.get(pk=input.get('pk'))
 
-    def resolve_current_enquiry(self, args, context, info):
-        """
-        :type args: dict
-        :type context: django.core.handlers.wsgi.WSGIRequest
-        :type info: graphql.execution.base.ResolveInfo
-        :rtype: saleor.enquiry.models.Enquiry | None
-        """
-        return self.enquiries.filter(is_submitted=False).first()
+    @classmethod
+    def get_model_from_instance(cls, info: ResolveInfo, input: dict) -> User:
+        return cls.get_instance(info, input)
 
-    def resolve_past_enquiries(self, args, context, info):
-        """
-        :type args: dict
-        :type context: django.core.handlers.wsgi.WSGIRequest
-        :type info: graphql.execution.base.ResolveInfo
-        :rtype: list[saleor.enquiry.models.Enquiry]
-        """
-        return self.enquiries.filter(is_submitted=True).all()
+    @classmethod
+    def check_user_access(cls, info: ResolveInfo, input: dict, user: User):
+        if not user.pk == info.context.user.pk:
+            Operations.raise_forbidden_access_error()
 
+    @classmethod
+    def check_access(cls, info: ResolveInfo, input: dict):
+        """ Only authorized user who is in staff or shop staff """
+        if not info.context.user.is_authenticated:
+            Operations.raise_unathorized_error()
 
-class UserInput:
-    email = graphene.String(required=True)
-    password = graphene.String(required=True)
+        if not info.context.user.is_staff:
+            if cls.is_create or cls.is_update:
+                user_input = cls.get_model_from_input(info, input)
+                cls.check_user_access(info, input, user_input)
+
+            if cls.is_update or cls.is_delete:
+                user_instance = cls.get_model_from_instance(info, input)
+                cls.check_user_access(info, input, user_instance)
 
 
 class CreateUser(Operations.MutationCreate, graphene.relay.ClientIDMutation):
-    form = UserCreationForm
+    form = CreateUserForm
+    is_create = True
     node = graphene.Field(UserNode)
 
-    class Input(UserInput):
-        pass
+    class Input:
+        email = graphene.String(required=True)
+        password1 = graphene.String(required=True)
+        password2 = graphene.String(required=True)
 
     @classmethod
-    def after_save(cls, input: dict, context: WSGIRequest, form: UserCreationForm) -> Operations.MutationCreate:
+    def after_save(cls, info: ResolveInfo, input: dict, form: CreateUserForm) -> 'CreateUser':
         form.instance.is_current_user = True
         return cls.validation_success(form)
+
+
+class UpdateUser(Operations.MutationUpdate, UserAccess, graphene.relay.ClientIDMutation):
+    form = UpdateUserForm
+    is_update = True
+    model = User
+    node = graphene.Field(UserNode)
+
+    class Input:
+        pk = graphene.Int(required=True)
+        email = graphene.String()
+        is_active = graphene.Boolean()
+        first_name = graphene.String()
+        last_name = graphene.String()
+        username = graphene.String()
+
+
+class DeleteUser(Operations.MutationDelete, UserAccess, graphene.relay.ClientIDMutation):
+    is_delete = True
+    model = User
+    node = graphene.Field(UserNode)
+
+    class Input:
+        pk = graphene.Int(required=True)
+
+    @classmethod
+    def delete(cls, info: ResolveInfo, input: dict, instance: User):
+        instance.is_active = False
+        instance.save()
 
 
 class Query:
@@ -75,10 +99,12 @@ class Query:
 
     def resolve_users(self, args, context, info) -> [User]:
         if context.user.is_staff:
-            return get_user_model().objects.all()
+            return User.objects.all()
 
         raise PermissionError('403 Forbidden Access')
 
 
 class Mutation:
     create_user = CreateUser.Field()
+    update_user = UpdateUser.Field()
+    delete_user = DeleteUser.Field()

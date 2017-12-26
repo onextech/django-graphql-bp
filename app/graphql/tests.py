@@ -1,11 +1,14 @@
 import json, random
-from app.user.forms import UserCreationForm
+from app.graphql.api import schema
 from app.graphql.utils import Operations
 from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import AnonymousUser, User
 from django.core.files.uploadedfile import UploadedFile
+from django.db import models
 from django.http import HttpRequest
 from django.test import TestCase
+from graphene.test import Client
 
 
 class Operation:
@@ -103,8 +106,9 @@ class GraphqlTestCase(TestCase):
                          'Check if data.' + field_name + ' = ' + str(value))
 
     def create_test_user(self, username, attributes: dict) -> User:
-        attributes['email'] = self.get_user_email(username)
-        attributes['password'] = username
+        attributes['username'] = self.get_user_email(username)
+        attributes['password1'] = username + 'password'
+        attributes['password2'] = username + 'password'
         form = UserCreationForm(attributes)
         form.save()
         return form.instance
@@ -152,3 +156,70 @@ class GraphqlTestCase(TestCase):
 
     def get_user_email(self, username) -> str:
         return settings.TEST_EMAIL_USERNAME + '+' + username + '@' + settings.TEST_EMAIL_DOMAIN
+
+    def create_mutation_success_test(self, model: models.Model, mutation: Mutation, context: HttpRequest = None):
+        count = model.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        self.assert_mutation_success(result, mutation.get_name())
+        self.assertEqual(model.objects.count(), count + 1, 'Check if ' + model.__name__ + ' has been created')
+        return result
+
+    def update_mutation_success_test(self, model_class: models.Model, mutation: Mutation, model: models.Model,
+                                     attribute: str, context: HttpRequest = None):
+        count = model_class.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        self.assert_mutation_success(result, mutation.get_name())
+        self.assertEqual(
+            model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
+        self.assertNotEqual(
+            getattr(model_class.objects.get(pk=model.pk), attribute),
+            getattr(model, attribute), 'Check if ' + model.__class__.__name__ + '.' + attribute + ' has been updated')
+        return result
+
+    def update_mutation_raised_error_test(self, model_class: models.Model, mutation: Mutation, model: models.Model,
+                                          attribute: str, error_message: str, context: HttpRequest = None):
+        count = model_class.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        self.assert_raised_error(result, error_message)
+        self.assertEqual(
+            model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
+        self.assertEqual(
+            getattr(model_class.objects.get(pk=model.pk), attribute),
+            getattr(model, attribute),
+            'Check if ' + model.__class__.__name__ + '.' + attribute + ' has not been updated')
+        return result
+
+    def delete_mutation_success_test(self, model: models.Model, mutation: Mutation, context: HttpRequest = None):
+        count = model.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        self.assert_mutation_success(result, mutation.get_name())
+        self.assertEqual(model.objects.count(), count - 1, 'Check if ' + model.__name__ + ' has been removed')
+        return result
+
+    def delete_mutation_raised_error_test(self, model: models.Model, mutation: Mutation, error_message: str,
+                                          context: HttpRequest = None):
+        count = model.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        self.assert_raised_error(result, error_message)
+        self.assertEqual(model.objects.count(), count, 'Check if ' + model.__name__ + ' has not been removed')
+        return result
