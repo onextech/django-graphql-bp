@@ -1,5 +1,5 @@
 from app.graphql.tests import GraphqlTestCase, Mutation, Query
-from django.contrib.auth.models import User
+from app.user.models import User
 
 
 class SchemaTestCase(GraphqlTestCase):
@@ -21,7 +21,8 @@ class SchemaTestCase(GraphqlTestCase):
     def get_update_user_mutation(self) -> Mutation:
         return Mutation('updateUser', {'ok': '', 'validationErrors': ''}, {
             'pk': self.user.pk,
-            'firstName': 'get_create_user_mutation'
+            'email': self.user.email,
+            'name': 'get_create_user_mutation'
         })
 
     def get_delete_user_mutation(self) -> Mutation:
@@ -58,20 +59,20 @@ class SchemaTestCase(GraphqlTestCase):
     # test updateUser migration
     def test_update_user_by_unauthorized_user(self):
         self.update_mutation_raised_error_test(
-            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_unauthorized_message())
+            User, self.get_update_user_mutation(), self.user, 'name', self.get_unauthorized_message())
 
     def test_update_user_by_not_owner(self):
         self.update_mutation_raised_error_test(
-            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_forbidden_access_message(),
+            User, self.get_update_user_mutation(), self.user, 'name', self.get_forbidden_access_message(),
             self.get_context_value(self.user2))
 
     def test_update_user_by_owner(self):
         self.update_mutation_success_test(
-            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_context_value(self.user))
+            User, self.get_update_user_mutation(), self.user, 'name', self.get_context_value(self.user))
 
     def test_update_user_by_staff(self):
         self.update_mutation_success_test(
-            User, self.get_update_user_mutation(), self.user, 'first_name', self.get_context_value(self.staff))
+            User, self.get_update_user_mutation(), self.user, 'name', self.get_context_value(self.staff))
 
     # test deleteUser migration
     def test_delete_user_by_unauthorized_user(self):

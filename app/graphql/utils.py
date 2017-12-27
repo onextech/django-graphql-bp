@@ -307,9 +307,6 @@ class Operations:
 
         @classmethod
         def mutate_and_get_payload(cls, root, info: ResolveInfo, **input: dict) -> 'Operations.MutationCreate':
-            """
-            :rtype: Operations.MutationCreate
-            """
             super(Operations.MutationCreate, cls).mutate_and_get_payload(root, info, **input)
             cls.validate_required_attributes()
             return cls.validate_and_save_form(info, input, cls.get_form(info, input))

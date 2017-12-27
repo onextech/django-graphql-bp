@@ -1,7 +1,7 @@
 import graphene
 from app.graphql.utils import DjangoPkInterface, Operations
 from app.user.forms import CreateUserForm, UpdateUserForm
-from django.contrib.auth.models import User
+from app.user.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
@@ -71,9 +71,7 @@ class UpdateUser(Operations.MutationUpdate, UserAccess, graphene.relay.ClientIDM
         pk = graphene.Int(required=True)
         email = graphene.String()
         is_active = graphene.Boolean()
-        first_name = graphene.String()
-        last_name = graphene.String()
-        username = graphene.String()
+        name = graphene.String()
 
 
 class DeleteUser(Operations.MutationDelete, UserAccess, graphene.relay.ClientIDMutation):

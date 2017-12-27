@@ -1,10 +1,13 @@
 from datetime import datetime
 from django.contrib.auth.models import AnonymousUser
 from django.utils.functional import SimpleLazyObject
+from graphql.execution.base import ResolveInfo
+
+'''
 from rest_framework.request import Request
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
-
+'''
 
 def get_user_jwt(request):
     """
@@ -18,6 +21,7 @@ def get_user_jwt(request):
     Returns: instance of user object or AnonymousUser object
     """
     user = None
+    '''
     try:
         user_jwt = JSONWebTokenAuthentication().authenticate(Request(request))
         if user_jwt is not None:
@@ -26,6 +30,7 @@ def get_user_jwt(request):
             user.is_authenticated = True
     except:
         pass
+        '''
     return user or AnonymousUser()
 
 
@@ -39,7 +44,7 @@ class JWTAuthenticationMiddleware(object):
 class CookieMiddleware(object):
     MIDDLEWARE_COOKIES = 'middleware_cookies'
 
-    def resolve(self, next, root, args, context, info):
+    def resolve(self, next, root: object, info: ResolveInfo, **kwargs):
         """
         Set cookies based on the name/type of the GraphQL operation
         :param next:
@@ -54,6 +59,11 @@ class CookieMiddleware(object):
             info.field_name == 'currentUser':
         """
 
+        print('!!!')
+        print(kwargs.get('input'))
+        print('!!!')
+
+        '''
         if info.field_name in ['loginUser', 'createUser']:
             try:
                 from django.contrib.auth import get_user_model, forms
@@ -89,7 +99,9 @@ class CookieMiddleware(object):
                 jwt_cookie = self.define_middleware_cookies(api_settings.JWT_AUTH_COOKIE, token, expires=expiration,
                                                             httponly=True)
                 self.set_middleware_cookies(context, jwt_cookie)
+            '''
 
+        '''
         if info.field_name == 'logoutUser':
             try:
                 context.COOKIES.get(api_settings.JWT_AUTH_COOKIE)
@@ -98,8 +110,9 @@ class CookieMiddleware(object):
             else:
                 jwt_cookie = self.define_middleware_cookies(api_settings.JWT_AUTH_COOKIE, '')
                 self.set_middleware_cookies(context, jwt_cookie)
+        '''
 
-        return next(root, args, context, info)
+        return next(root, info, **kwargs)
 
     @staticmethod
     def define_middleware_cookies(key, value='', **kwargs):

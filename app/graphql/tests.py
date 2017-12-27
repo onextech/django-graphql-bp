@@ -1,9 +1,10 @@
 import json, random
 from app.graphql.api import schema
 from app.graphql.utils import Operations
+from app.user.forms import CreateUserForm
+from app.user.models import User
 from django.conf import settings
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models
 from django.http import HttpRequest
@@ -106,10 +107,10 @@ class GraphqlTestCase(TestCase):
                          'Check if data.' + field_name + ' = ' + str(value))
 
     def create_test_user(self, username, attributes: dict) -> User:
-        attributes['username'] = self.get_user_email(username)
+        attributes['email'] = self.get_user_email(username)
         attributes['password1'] = username + 'password'
         attributes['password2'] = username + 'password'
-        form = UserCreationForm(attributes)
+        form = CreateUserForm(attributes)
         form.save()
         return form.instance
 

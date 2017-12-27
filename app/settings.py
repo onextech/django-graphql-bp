@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'graphene_django',
 ]
 
 MIDDLEWARE = [
@@ -132,3 +133,15 @@ TEST_EMAIL_DOMAIN = os.environ.get('TEST_EMAIL_DOMAIN')
 
 # Path to root directory of the project
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+GRAPHENE = {
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+        'app.graphql.middleware.CookieMiddleware',
+    ],
+    'SCHEMA': 'app.graphql.api.schema',
+    'SCHEMA_OUTPUT': os.path.join(PROJECT_ROOT, 'static', 'schema.json')
+}
+
+AUTH_USER_MODEL = 'user.User'
+
