@@ -136,8 +136,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 GRAPHENE = {
     'MIDDLEWARE': [
-        'graphene_django.debug.DjangoDebugMiddleware',
-        'app.graphql.middleware.CookieMiddleware',
+        'graphene_django.debug.DjangoDebugMiddleware'
     ],
     'SCHEMA': 'app.graphql.api.schema',
     'SCHEMA_OUTPUT': os.path.join(PROJECT_ROOT, 'static', 'schema.json')

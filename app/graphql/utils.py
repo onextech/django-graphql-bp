@@ -1,5 +1,4 @@
 import graphene, re
-# from app.graphql.middleware import CookieMiddleware
 from django import forms
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.exceptions import ValidationError
@@ -20,7 +19,7 @@ class DjangoPkInterface(graphene.Interface):
     """
     pk = graphene.Int(description='Primary key')
 
-    def resolve_pk(self, args, context, info):
+    def resolve_pk(self, info: ResolveInfo, **input: dict) -> int:
         return self.pk
 
 
@@ -154,24 +153,12 @@ class Operations:
     UNAUTHORIZED_ERROR = '401 Unauthorized'
 
     @staticmethod
-    def get_cookie(context: WSGIRequest, name: str):
-        return context.COOKIES.get(name)
-
-    @staticmethod
     def raise_forbidden_access_error():
         raise PermissionError(Operations.FORBIDDEN_ACCESS_ERROR)
 
     @staticmethod
     def raise_unathorized_error():
         raise PermissionError(Operations.UNAUTHORIZED_ERROR)
-
-    '''
-    @staticmethod
-    def set_cookie(context: WSGIRequest, name: str, value: str = '', **kwargs: dict):
-        cookie = CookieMiddleware.define_middleware_cookies(name, value, **kwargs)
-        CookieMiddleware.set_middleware_cookies(context, cookie)
-        context.COOKIES[name] = value
-    '''
 
     class MutationAbstract:
         ok = graphene.Boolean()
@@ -260,17 +247,11 @@ class Operations:
         node = None  # Set node of graphene.Field(graphene_django.DjangoObjectType)
 
         @classmethod
-        def validation_error(cls, form: ModelForm):
-            """
-            :rtype: Operations.MutationCreate
-            """
+        def validation_error(cls, form: ModelForm) -> 'Operations.MutationCreate':
             return cls(ok=False, node=form.instance, validation_errors=form.errors.as_json())
 
         @classmethod
-        def validation_success(cls, form: ModelForm):
-            """
-            :rtype: Operations.MutationCreate
-            """
+        def validation_success(cls, form: ModelForm) -> 'Operations.MutationCreate':
             return cls(ok=True, node=form.instance)
 
         @classmethod
@@ -286,16 +267,17 @@ class Operations:
             return True
 
         @classmethod
-        def after_save(cls, info: ResolveInfo, input: dict, form: ModelForm):
-            """
-            :rtype: Operations.MutationCreate
-            """
+        def save(cls, info: ResolveInfo, input: dict, form: ModelForm):
+            form.save()
+
+        @classmethod
+        def after_save(cls, info: ResolveInfo, input: dict, form: ModelForm) -> 'Operations.MutationCreate':
             return cls.validation_success(form)
 
         @classmethod
         def validate_and_save_form(cls, info: ResolveInfo, input: dict, form: ModelForm) -> 'Operations.MutationCreate':
             if form.is_valid() and cls.before_save(info, input, form):
-                form.save()
+                cls.save(info, input, form)
                 return cls.after_save(info, input, form)
             else:
                 return cls.validation_error(form)

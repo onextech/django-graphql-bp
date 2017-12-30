@@ -2,7 +2,8 @@ import graphene
 from app.graphql.utils import DjangoPkInterface, Operations
 from app.user.forms import CreateUserForm, UpdateUserForm
 from app.user.models import User
-from django.core.handlers.wsgi import WSGIRequest
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql.execution.base import ResolveInfo
@@ -10,9 +11,10 @@ from graphql.execution.base import ResolveInfo
 
 class UserNode(DjangoObjectType):
     class Meta:
-        model = User
-        interfaces = (graphene.relay.Node, DjangoPkInterface)
+        exclude_fields = ['password']
         filter_fields = ['email', 'is_active']
+        interfaces = (graphene.relay.Node, DjangoPkInterface)
+        model = User
 
 
 class UserAccess(Operations.MutationAccess):
@@ -47,7 +49,6 @@ class UserAccess(Operations.MutationAccess):
 
 class CreateUser(Operations.MutationCreate, graphene.relay.ClientIDMutation):
     form = CreateUserForm
-    is_create = True
     node = graphene.Field(UserNode)
 
     class Input:
@@ -88,12 +89,45 @@ class DeleteUser(Operations.MutationDelete, UserAccess, graphene.relay.ClientIDM
         instance.save()
 
 
+class LoginUser(Operations.MutationAbstract, graphene.relay.ClientIDMutation):
+    node = graphene.Field(UserNode)
+    validation_errors = graphene.String()
+
+    form = AuthenticationForm
+
+    class Input:
+        email = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    @classmethod
+    def validation_error(cls, form: AuthenticationForm) -> 'LoginUser':
+        return cls(ok=False, node=form.get_user(), validation_errors=form.errors.as_json())
+
+    @classmethod
+    def validation_success(cls, form: AuthenticationForm) -> 'LoginUser':
+        return cls(ok=True, node=form.get_user())
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info: ResolveInfo, **input: dict):
+        super(LoginUser, cls).mutate_and_get_payload(root, info, **input)
+        form = AuthenticationForm(info.context, data={
+            'username': input.get(User.USERNAME_FIELD, '').lower(),
+            'password': input.get('password')
+        })
+
+        if form.is_valid():
+            login(info.context, form.get_user())
+            return cls.validation_success(form)
+        else:
+            return cls.validation_error(form)
+
+
 class Query:
     current_user = graphene.Field(UserNode)
     users = DjangoFilterConnectionField(UserNode)
 
-    def resolve_current_user(self, args: dict, context: WSGIRequest, info: ResolveInfo) -> User:
-        return UserNode.get_node(context.user.id, context, info)
+    def resolve_current_user(self, info: ResolveInfo, **input: dict) -> User:
+        return UserNode.get_node(info, info.context.user.id)
 
     def resolve_users(self, args, context, info) -> [User]:
         if context.user.is_staff:
@@ -106,3 +140,5 @@ class Mutation:
     create_user = CreateUser.Field()
     update_user = UpdateUser.Field()
     delete_user = DeleteUser.Field()
+
+    login_user = LoginUser.Field()
