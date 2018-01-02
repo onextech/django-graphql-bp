@@ -2,7 +2,7 @@ import graphene
 from app.graphql.utils import DjangoPkInterface, Operations
 from app.user.forms import CreateUserForm, UpdateUserForm
 from app.user.models import User
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
@@ -108,7 +108,7 @@ class LoginUser(Operations.MutationAbstract, graphene.relay.ClientIDMutation):
         return cls(ok=True, node=form.get_user())
 
     @classmethod
-    def mutate_and_get_payload(cls, root, info: ResolveInfo, **input: dict):
+    def mutate_and_get_payload(cls, root, info: ResolveInfo, **input: dict) -> 'LoginUser':
         super(LoginUser, cls).mutate_and_get_payload(root, info, **input)
         form = AuthenticationForm(info.context, data={
             'username': input.get(User.USERNAME_FIELD, '').lower(),
@@ -120,6 +120,22 @@ class LoginUser(Operations.MutationAbstract, graphene.relay.ClientIDMutation):
             return cls.validation_success(form)
         else:
             return cls.validation_error(form)
+
+
+class LogoutUser(Operations.MutationAccess, graphene.relay.ClientIDMutation):
+    node = graphene.Field(UserNode)
+    validation_errors = graphene.String()
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info: ResolveInfo, **input: dict) -> 'LogoutUser':
+        user = info.context.user
+
+        if user.is_authenticated:
+            logout(info.context)
+        else:
+            user = None
+
+        return cls(ok=True, node=user)
 
 
 class Query:
@@ -142,3 +158,4 @@ class Mutation:
     delete_user = DeleteUser.Field()
 
     login_user = LoginUser.Field()
+    logout_user = LogoutUser.Field()
