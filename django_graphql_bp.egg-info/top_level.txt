@@ -1,1 +1,1 @@
-django-graphql-bp
+django_graphql_bp
