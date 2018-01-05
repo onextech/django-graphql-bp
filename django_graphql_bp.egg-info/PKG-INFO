@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: django-graphql-bp
-Version: 0.0.3
+Version: 0.0.5
 Summary: Boiler plate for API projects based on Django 2 &amp; graphql (graphene) 2
 Home-page: https://github.com/onextech/django-graphql-bp
 Author: Artsem Stalavitski

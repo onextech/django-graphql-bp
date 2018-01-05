@@ -1,14 +1,15 @@
 import json, random
-from app.graphql.api import schema
-from app.graphql.utils import Operations
-from app.user.forms import CreateUserForm
-from app.user.models import User
+from django_graphql_bp.graphql.api import schema
+from django_graphql_bp.graphql.utils import Operations
+from django_graphql_bp.user.forms import CreateUserForm
+from django_graphql_bp.user.models import User
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models
 from django.http import HttpRequest
 from django.test import TestCase
+from graphene import Schema
 from graphene.test import Client
 
 
@@ -140,9 +141,6 @@ class GraphqlTestCase(TestCase):
     def get_is_test_offline(self) -> bool:
         return settings.TEST_OFFLINE
 
-    def get_unauthorized_message(self) -> str:
-        return Operations.UNAUTHORIZED_ERROR
-
     def get_mutation_node_attribute_value(self, result: dict, operation_name: str, attribute_name: str):
         return self.get_operation_field_value(result, operation_name, 'node')[attribute_name]
 
@@ -155,6 +153,12 @@ class GraphqlTestCase(TestCase):
     def get_random_qunatity(self) -> int:
         return int(round(random.uniform(1, 10)))
 
+    def get_schema(self) -> Schema:
+        return schema
+
+    def get_unauthorized_message(self) -> str:
+        return Operations.UNAUTHORIZED_ERROR
+
     def get_user_email(self, username) -> str:
         return settings.TEST_EMAIL_USERNAME + '+' + username + '@' + settings.TEST_EMAIL_DOMAIN
 
@@ -164,7 +168,7 @@ class GraphqlTestCase(TestCase):
         if context is None:
             context = self.get_context_value()
 
-        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_mutation_success(result, mutation.get_name())
         self.assertEqual(model.objects.count(), count + 1, 'Check if ' + model.__name__ + ' has been created')
         return result
@@ -176,7 +180,7 @@ class GraphqlTestCase(TestCase):
         if context is None:
             context = self.get_context_value()
 
-        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_mutation_success(result, mutation.get_name())
         self.assertEqual(
             model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
@@ -192,7 +196,7 @@ class GraphqlTestCase(TestCase):
         if context is None:
             context = self.get_context_value()
 
-        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_raised_error(result, error_message)
         self.assertEqual(
             model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
@@ -208,7 +212,7 @@ class GraphqlTestCase(TestCase):
         if context is None:
             context = self.get_context_value()
 
-        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_mutation_success(result, mutation.get_name())
         self.assertEqual(model.objects.count(), count - 1, 'Check if ' + model.__name__ + ' has been removed')
         return result
@@ -220,7 +224,7 @@ class GraphqlTestCase(TestCase):
         if context is None:
             context = self.get_context_value()
 
-        result = Client(schema).execute(mutation.get_result(), context_value=context)
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_raised_error(result, error_message)
         self.assertEqual(model.objects.count(), count, 'Check if ' + model.__name__ + ' has not been removed')
         return result

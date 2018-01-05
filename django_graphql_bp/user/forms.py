@@ -1,4 +1,4 @@
-from app.user.models import User
+from django_graphql_bp.user.models import User
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 

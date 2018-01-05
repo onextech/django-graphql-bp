@@ -35,7 +35,7 @@ django-graphql-bp
         }
     ```
 
-2) Test e-mailbox.
+2) Test e-mailbox:
     Email address wherewhere tests will spam with emails.
 
     Environment variables:
@@ -63,6 +63,26 @@ django-graphql-bp
     AUTH_USER_MODEL = 'user.User'
     ```
     **This User model will be used instead of standard django.contrib.auth.models.User**
+    
+4) Graphql:
+    In config file:
+    
+    ``` python
+    INSTALLED_APPS = [
+        ...
+        'graphene_django',
+        ...
+    ]
+    # Path to root directory of the project
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    GRAPHENE = {
+        # where Schema class is located
+        'SCHEMA': 'app.graphql.api.schema' 
+    }
+    ```
+    
+
 ---
 
 # Installation
