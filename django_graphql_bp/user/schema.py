@@ -1,7 +1,7 @@
 import graphene
-from app.graphql.utils import DjangoPkInterface, Operations
-from app.user.forms import CreateUserForm, UpdateUserForm
-from app.user.models import User
+from django_graphql_bp.graphql.utils import DjangoPkInterface, Operations
+from django_graphql_bp.user.forms import CreateUserForm, UpdateUserForm
+from django_graphql_bp.user.models import User
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from graphene_django import DjangoObjectType

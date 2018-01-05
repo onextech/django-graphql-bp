@@ -1,6 +1,6 @@
-from app.graphql.api import schema
-from app.graphql.tests import GraphqlTestCase, Mutation, Query
-from app.user.models import User
+from django_graphql_bp.graphql.api import schema
+from django_graphql_bp.graphql.tests import GraphqlTestCase, Mutation, Query
+from django_graphql_bp.user.models import User
 from graphene.test import Client
 
 
