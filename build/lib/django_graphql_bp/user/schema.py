@@ -145,8 +145,8 @@ class Query:
     def resolve_current_user(self, info: ResolveInfo, **input: dict) -> User:
         return UserNode.get_node(info, info.context.user.id)
 
-    def resolve_users(self, args, context, info) -> [User]:
-        if context.user.is_staff:
+    def resolve_users(self, info: ResolveInfo, **input: dict) -> [User]:
+        if info.context.user.is_staff:
             return User.objects.all()
 
         raise PermissionError('403 Forbidden Access')

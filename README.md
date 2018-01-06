@@ -100,7 +100,7 @@ django-graphql-bp
     - graphene-django 2.0+
     - psycopg2 2.7+
     
-2) Database migrations
+2) Database migrations:
     Use standard django migration to install custom user model:
     ```
     # ./manage.py migrate
@@ -117,7 +117,45 @@ django-graphql-bp
     ]
     ```
     
+4) Schema
+    To use all User's operations from package need to extend Queries and Mutations from UserQueries and UserMutations from django_graphql_bp.graphql.api.
+    api.py file example:
+    
+    ``` python
+    import graphene
+    from django_graphql_bp.graphql.api import UserQueries, UserMutations
+
+
+    class Queries(UserQueries):
+        pass
+
+
+    class Mutations(UserMutations):
+        pass
+
+    schema = graphene.Schema(query=Queries, mutation=Mutations)
+    ```
+
+    *Location of api.py file has been set up at Configuration #4*
 ---
+
+5) Tests:
+    To enable tests for all User's operations from package need to create extend UserSchemaTestCase in tests.py file.
+    test.py example:
+    
+    ``` python
+    from app.graphql.api import schema
+    from django_graphql_bp.user.tests import SchemaTestCase as UserSchemaTestCase
+    from graphene import Schema
+    
+    
+    class SchemaTestCase(UserSchemaTestCase):
+        def get_schema(self) -> Schema:
+            return schema
+    ```
+    
+    *get_schema allow tests use Schema from application instead of Schema from package*
+    
 
 # Usage
 
