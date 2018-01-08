@@ -242,8 +242,66 @@ django-graphql-bp
         - ok - Usage #1.1;
         - node - User object (with password field excluded) - Usage #1.2;
         - validationErrors - Usage #1.3.
+
+    2. Update mutation:
+        ``` javascript
+        mutation {
+          updateUser(input: {
+            pk: 1
+            email: "email@email.com"
+            name: "name"
+            isActive: true
+          }) {
+            ok
+            node {
+              pk
+            }
+            validationErrors
+          }
+        }
+        ```
+        
+        Access:
+        - user to own record;
+        - staff user.
+        
+        Input:
+        - pk (required) - int;
+        - email (optional) - string;
+        - name (optional) - string;
+        - isActive (optional) - bool.
+        
+        Output:
+        - ok - Usage #1.1;
+        - node - User object (with password field excluded) - Usage #1.2;
+        - validationErrors - Usage #1.3.
+
+    3. Delete mutation:
+        ``` javascript
+        mutation {
+          deleteUser(input: {
+            pk: 1
+          }) {
+            ok
+            node {
+              pk
+            }
+          }
+        }
+        ```
+        
+        Access:
+        - user to own record;
+        - staff user.
+        
+        Input:
+        - pk (required) - int.
+        
+        Output:
+        - ok - Usage #1.1;
+        - node - User object (with password field excluded) - Usage #1.2.
     
-    2. Login mutation:
+    4. Login mutation:
         ``` javascript
         mutation {
           loginUser(input: {
@@ -272,7 +330,7 @@ django-graphql-bp
         - node - User object (with password field excluded) - Usage #1.2;
         - validationErrors - Usage #1.3.
         
-    3. Logout mutation:
+    5. Logout mutation:
         ``` javascript
         mutation {
           logoutUser(input: {}) {
@@ -296,7 +354,7 @@ django-graphql-bp
         - ok - Usage #1.1;
         - node - User object (with password field excluded) - Usage #1.2.
         
-    4. Current user query:
+    6. Current user query:
         ``` javascript
         query {
           currentUser {
@@ -312,7 +370,7 @@ django-graphql-bp
         Output:
         - node - User object (with password field excluded) - Usage #1.2.    
         
-    5. Current user query:
+    7. Current user query:
         ``` javascript
         query {
           users {

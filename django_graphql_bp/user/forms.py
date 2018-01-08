@@ -15,8 +15,21 @@ class CreateUserForm(UserCreationForm):
 
 
 class UpdateUserForm(forms.ModelForm):
+    email = forms.EmailField(required=False)
+    is_active = forms.BooleanField(required=False)
+    name = forms.CharField(required=False)
+
     class Meta:
         model = User
         fields = ['email', 'is_active', 'name']
+
+    def clean(self) -> dict:
+        cleaned_data = super(UpdateUserForm, self).clean()
+
+        for field in self.fields:
+            if field not in self.data.keys():
+                cleaned_data[field] = getattr(self.instance, field)
+
+        return cleaned_data
 
 

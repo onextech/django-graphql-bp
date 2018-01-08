@@ -5,7 +5,6 @@ from django_graphql_bp.user.models import User
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from graphene_django import DjangoObjectType
-from graphene_django.filter import DjangoFilterConnectionField
 from graphql.execution.base import ResolveInfo
 
 
