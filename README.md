@@ -2,12 +2,10 @@ django-graphql-bp
 =======
 ##### Boiler plate for API projects based on Django 2 &amp; graphql (graphene) 2
 
----
 # Requirments
 - python: 3.5+
 - pip: 9.0+
 - postgress: 9.5+
----
 
 # Configuration
 ##### Settings and Environment variables
@@ -36,6 +34,7 @@ django-graphql-bp
     ```
 
 2) Test e-mailbox:
+
     Email address wherewhere tests will spam with emails.
 
     Environment variables:
@@ -51,6 +50,7 @@ django-graphql-bp
     ```
 
 3) Custom user model:
+
     In config file:
 
     ``` python
@@ -65,6 +65,7 @@ django-graphql-bp
     **This User model will be used instead of standard django.contrib.auth.models.User**
     
 4) Graphql:
+
     In config file:
     
     ``` python
@@ -87,6 +88,7 @@ django-graphql-bp
 
 # Installation
 1) Package:
+
     To install run:
     
     ```
@@ -101,12 +103,14 @@ django-graphql-bp
     - psycopg2 2.7+
     
 2) Database migrations:
+
     Use standard django migration to install custom user model:
     ```
     # ./manage.py migrate
     ```
 
 3) Url for graphql:
+
     In urls.py:
     ``` python
     from django.views.decorators.csrf import csrf_exempt
@@ -117,7 +121,8 @@ django-graphql-bp
     ]
     ```
     
-4) Schema
+4) Schema:
+
     To use all User's operations from package need to extend Queries and Mutations from UserQueries and UserMutations from django_graphql_bp.graphql.api.
     api.py file example:
     
@@ -140,6 +145,7 @@ django-graphql-bp
 ---
 
 5) Tests:
+
     To enable tests for all User's operations from package need to create extend UserSchemaTestCase in tests.py file.
     test.py example:
     
@@ -194,9 +200,11 @@ django-graphql-bp
         ```
 
 2) CRUD mutations:
-    blah blah bla
+
+    coming soon...
 
 3) User operations:
+
     1. Create mutation:
         ``` javascript
         mutation {
@@ -219,12 +227,10 @@ django-graphql-bp
         - any user;
         
         Input:
-        
         - email (required) - string;
         - password (required) - string.
         
         Output:
-        
         - ok - Usage #1.1;
         - node - User object (with password field excluded) Usage #1.2;
         - validationErrors - Usage #1.3.
@@ -250,12 +256,10 @@ django-graphql-bp
         - any user;
         
         Input:
-        
         - email (required) - string;
         - password (required) - string.
         
         Output:
-        
         - ok - Usage #1.1;
         - node - User object (with password field excluded) Usage #1.2;
         - validationErrors - Usage #1.3.
