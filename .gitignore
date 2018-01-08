@@ -1,5 +1,12 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
-# Local settings
-env.py
+# Package build data
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~

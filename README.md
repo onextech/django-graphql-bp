@@ -158,4 +158,129 @@ django-graphql-bp
     
 
 # Usage
+1) Common:
 
+    List of common usages:
+    
+    1. ok (bool) - boolean success flag for mutations that not threw any exceptions.
+    
+    2. node (object) - object related to certain Django model contains all fields and relations that wasn't excluded.
+    
+    3. validationErrors (object) - JSON object with validation errors of following structure:
+        ``` javascript
+        {
+            fieldname1: [
+                {code: "error code 1", message: "error message 1"}, 
+                ...
+            ], 
+            ...
+        }
+        ```
+
+    4. errors - array of error objects of following structure:
+    
+        ``` javascript
+        [
+            {
+              "message": "error message",
+              "locations": [
+                {
+                  "line": (int), // line of error
+                  "column": (int)  // column of error
+                }
+              ]
+            }
+        ]
+        ```
+
+2) CRUD mutations:
+    blah blah bla
+
+3) User operations:
+    1. Create mutation:
+        ``` javascript
+        mutation {
+          createUser(input: {
+            email: "email@email.com"
+            password1: "password"
+            password2: "password"
+          }) {
+            ok
+            node {
+              pk
+            }
+            validationErrors
+          }
+        }
+        ```
+        
+        Access:
+        - guest;
+        - any user;
+        
+        Input:
+        
+        - email (required) - string;
+        - password (required) - string.
+        
+        Output:
+        
+        - ok - Usage #1.1;
+        - node - User object (with password field excluded) Usage #1.2;
+        - validationErrors - Usage #1.3.
+    
+    2. Login mutation:
+        ``` javascript
+        mutation {
+          loginUser(input: {
+            email: "email@email.com"
+            password: "password"
+          }) {
+            ok
+            node {
+              pk
+            }
+            validationErrors
+          }
+        }
+        ```
+        
+        Access:
+        - guest;
+        - any user;
+        
+        Input:
+        
+        - email (required) - string;
+        - password (required) - string.
+        
+        Output:
+        
+        - ok - Usage #1.1;
+        - node - User object (with password field excluded) Usage #1.2;
+        - validationErrors - Usage #1.3.
+        
+    3. Logout mutation:
+        ``` javascript
+        mutation {
+          logoutUser(input: {}) {
+            ok
+            node {
+              pk
+            }
+          }
+        }
+        ```
+        
+        Access:
+        - guest;
+        - any user;
+        
+        Input:
+        - None
+        
+        Output:
+        
+        - ok - Usage #1.1;
+        - node - User object (with password field excluded) Usage #1.2.
+        
