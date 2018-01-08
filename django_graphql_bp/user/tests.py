@@ -46,11 +46,20 @@ class SchemaTestCase(GraphqlTestCase):
             'pk': ''
         })
 
-    # test createUser migration
+    def get_users_query(self) -> Query:
+        return Query('users', {
+            'edges': {
+                'node': {
+                    'pk': ''
+                }
+            }
+        })
+
+    # createUser migration
     def test_create_user(self):
         self.create_mutation_success_test(User, self.get_create_user_mutation())
 
-    # test updateUser migration
+    # updateUser migration
     def test_update_user_by_unauthorized_user(self):
         self.update_mutation_raised_error_test(
             User, self.get_update_user_mutation(), self.user, 'name', self.get_unauthorized_message())
@@ -68,7 +77,7 @@ class SchemaTestCase(GraphqlTestCase):
         self.update_mutation_success_test(
             User, self.get_update_user_mutation(), self.user, 'name', self.get_context_value(self.staff))
 
-    # test deleteUser migration
+    # deleteUser migration
     def test_delete_user_by_unauthorized_user(self):
         self.update_mutation_raised_error_test(
             User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_unauthorized_message())
@@ -86,19 +95,19 @@ class SchemaTestCase(GraphqlTestCase):
         self.update_mutation_success_test(
             User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_context_value(self.staff))
 
-    # test loginUser mutation
+    # loginUser mutation
     def test_log_in(self):
         mutation = self.get_login_user_mutation()
         result = Client(schema).execute(mutation.get_result(), context_value=self.get_context_value())
         # TODO cannot test sessions with graphql schema?
 
-    # test logoutUser mutation
+    # logoutUser mutation
     def test_logout_in(self):
         mutation = self.get_logout_user_mutation()
         result = Client(schema).execute(mutation.get_result(), context_value=self.get_context_value(self.user))
         # TODO cannot test sessions with graphql schema?
 
-    # test currentUser query
+    # currentUser query
     def test_current_user_by_unauthorized_user(self):
         query = self.get_current_user_query()
         result = Client(schema).execute(query.get_result(), context_value=self.get_context_value())
@@ -111,3 +120,23 @@ class SchemaTestCase(GraphqlTestCase):
         self.assertEqual(
             self.get_operation_field_value(result, query.get_name(), 'pk'), self.user.pk,
             'Check if logged in user is correct')
+
+    # users query
+    def test_users_by_unauthorized_user(self):
+        query = self.get_users_query()
+        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value())
+        self.assert_raised_error(result, self.get_forbidden_access_message())
+
+    # users query
+    def test_users_by_not_staff(self):
+        query = self.get_users_query()
+        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value(self.user))
+        self.assert_raised_error(result, self.get_forbidden_access_message())
+
+    # users query
+    def test_users_by_staff(self):
+        query = self.get_users_query()
+        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value(self.staff))
+        self.assert_operation_no_errors(result)
+        edges = self.get_operation_field_value(result, query.get_name(), 'edges')
+        self.assertEqual(len(edges), User.objects.count(), 'Check if users query has returned full set.')

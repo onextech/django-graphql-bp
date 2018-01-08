@@ -1,5 +1,5 @@
 import graphene
-from django_graphql_bp.graphql.utils import DjangoPkInterface, Operations
+from django_graphql_bp.graphql.utils import DjangoPkInterface, Operations, SearchConnectionField
 from django_graphql_bp.user.forms import CreateUserForm, UpdateUserForm
 from django_graphql_bp.user.models import User
 from django.contrib.auth import login, logout
@@ -140,7 +140,7 @@ class LogoutUser(Operations.MutationAccess, graphene.relay.ClientIDMutation):
 
 class Query:
     current_user = graphene.Field(UserNode)
-    users = DjangoFilterConnectionField(UserNode)
+    users = SearchConnectionField(UserNode)
 
     def resolve_current_user(self, info: ResolveInfo, **input: dict) -> User:
         return UserNode.get_node(info, info.context.user.id)

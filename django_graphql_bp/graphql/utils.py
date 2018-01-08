@@ -122,12 +122,12 @@ class SearchConnectionField(DjangoFilterConnectionField):
 
     @classmethod
     def connection_resolver(cls, resolver, connection, default_manager, max_limit, enforce_first_or_last,
-                            filterset_class, filtering_args, search_vector_class, root, args, context, info):
+                            filterset_class, filtering_args, search_vector_class, root, info, **args):
         qs = cls.get_query_set(args, default_manager, filterset_class, filtering_args)
         qs = cls.apply_search(args, qs, search_vector_class)
         qs = cls.apply_sort(args, qs)
         return super(DjangoFilterConnectionField, cls).connection_resolver(
-            resolver, connection, qs, max_limit, enforce_first_or_last, root, args, context, info)
+            resolver, connection, qs, max_limit, enforce_first_or_last, root, info, **args)
 
     def get_resolver(self, parent_resolver):
         return partial(

@@ -142,7 +142,6 @@ django-graphql-bp
     ```
 
     *Location of api.py file has been set up at Configuration #4*
----
 
 5) Tests:
 
@@ -180,6 +179,15 @@ django-graphql-bp
                 ...
             ], 
             ...
+        }
+        ```
+    
+    4. edges (object) - array object of nodes (Usage #2):
+        ``` javascript
+        {
+            node {
+                // node data
+            }
         }
         ```
 
@@ -232,7 +240,7 @@ django-graphql-bp
         
         Output:
         - ok - Usage #1.1;
-        - node - User object (with password field excluded) Usage #1.2;
+        - node - User object (with password field excluded) - Usage #1.2;
         - validationErrors - Usage #1.3.
     
     2. Login mutation:
@@ -253,7 +261,7 @@ django-graphql-bp
         
         Access:
         - guest;
-        - any user;
+        - any user.
         
         Input:
         - email (required) - string;
@@ -261,7 +269,7 @@ django-graphql-bp
         
         Output:
         - ok - Usage #1.1;
-        - node - User object (with password field excluded) Usage #1.2;
+        - node - User object (with password field excluded) - Usage #1.2;
         - validationErrors - Usage #1.3.
         
     3. Logout mutation:
@@ -278,7 +286,7 @@ django-graphql-bp
         
         Access:
         - guest;
-        - any user;
+        - any user.
         
         Input:
         - None
@@ -286,5 +294,39 @@ django-graphql-bp
         Output:
         
         - ok - Usage #1.1;
-        - node - User object (with password field excluded) Usage #1.2.
+        - node - User object (with password field excluded) - Usage #1.2.
         
+    4. Current user query:
+        ``` javascript
+        query {
+          currentUser {
+            pk
+          }
+        }
+        ```
+        
+        Access:
+        - guest;
+        - any user.
+        
+        Output:
+        - node - User object (with password field excluded) - Usage #1.2.    
+        
+    5. Current user query:
+        ``` javascript
+        query {
+          users {
+            edges {
+              node {
+                pk
+              }
+            }
+          }
+        }
+        ```
+        
+        Access:
+        - staff member.
+        
+        Output:
+        - edges - of User objects - Usage #1.4.
