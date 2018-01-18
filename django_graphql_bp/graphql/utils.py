@@ -233,12 +233,12 @@ class Operations:
             return cls.get_instance(info, input)
 
         @classmethod
-        def check_access(cls, input: dict, context: WSGIRequest):
+        def check_access(cls, info: ResolveInfo, input: dict):
             """ Only authorized user who is in staff """
-            if not context.user.is_authenticated:
+            if not info.context.user.is_authenticated:
                 Operations.raise_unathorized_error()
 
-            if not context.user.is_staff:
+            if not info.context.user.is_staff:
                 Operations.raise_forbidden_access_error()
 
     class MutationCreate(MutationAbstract):

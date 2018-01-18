@@ -1,4 +1,3 @@
-from django_graphql_bp.graphql.api import schema
 from django_graphql_bp.graphql.tests import GraphqlTestCase, Mutation, Query
 from django_graphql_bp.user.models import User
 from graphene.test import Client
@@ -90,7 +89,7 @@ class SchemaTestCase(GraphqlTestCase):
     def test_delete_user_by_owner(self):
         self.update_mutation_success_test(
             User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_context_value(self.user))
-    
+
     def test_delete_user_by_staff(self):
         self.update_mutation_success_test(
             User, self.get_delete_user_mutation(), self.user, 'is_active', self.get_context_value(self.staff))
@@ -98,24 +97,25 @@ class SchemaTestCase(GraphqlTestCase):
     # loginUser mutation
     def test_log_in(self):
         mutation = self.get_login_user_mutation()
-        result = Client(schema).execute(mutation.get_result(), context_value=self.get_context_value())
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=self.get_context_value())
         # TODO cannot test sessions with graphql schema?
 
     # logoutUser mutation
     def test_logout_in(self):
         mutation = self.get_logout_user_mutation()
-        result = Client(schema).execute(mutation.get_result(), context_value=self.get_context_value(self.user))
+        result = Client(
+            self.get_schema()).execute(mutation.get_result(), context_value=self.get_context_value(self.user))
         # TODO cannot test sessions with graphql schema?
 
     # currentUser query
     def test_current_user_by_unauthorized_user(self):
         query = self.get_current_user_query()
-        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value())
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value())
         self.assertIsNone(result['data'][query.get_name()], 'Check if user is not logged in')
 
     def test_current_user_by_authorized_user(self):
         query = self.get_current_user_query()
-        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value(self.user))
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value(self.user))
         self.assertIsNotNone(result['data'][query.get_name()], 'Check if user is logged in')
         self.assertEqual(
             self.get_operation_field_value(result, query.get_name(), 'pk'), self.user.pk,
@@ -124,19 +124,19 @@ class SchemaTestCase(GraphqlTestCase):
     # users query
     def test_users_by_unauthorized_user(self):
         query = self.get_users_query()
-        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value())
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value())
         self.assert_raised_error(result, self.get_forbidden_access_message())
 
     # users query
     def test_users_by_not_staff(self):
         query = self.get_users_query()
-        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value(self.user))
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value(self.user))
         self.assert_raised_error(result, self.get_forbidden_access_message())
 
     # users query
     def test_users_by_staff(self):
         query = self.get_users_query()
-        result = Client(schema).execute(query.get_result(), context_value=self.get_context_value(self.staff))
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value(self.staff))
         self.assert_operation_no_errors(result)
         edges = self.get_operation_field_value(result, query.get_name(), 'edges')
         self.assertEqual(len(edges), User.objects.count(), 'Check if users query has returned full set.')
