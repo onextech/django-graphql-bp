@@ -45,6 +45,7 @@ django-graphql-bp
 
     In config file:
     ``` python
+    # Test email of the next structure: TEST_EMAIL_USERNAME@TEST_EMAIL_DOMAIN
     TEST_EMAIL_USERNAME = os.environ.get('TEST_EMAIL_USERNAME')
     TEST_EMAIL_DOMAIN = os.environ.get('TEST_EMAIL_DOMAIN')
     ```
@@ -60,6 +61,7 @@ django-graphql-bp
         ...
     ]
     
+    # custom User model
     AUTH_USER_MODEL = 'user.User'
     ```
     **This User model will be used instead of standard django.contrib.auth.models.User**
@@ -370,7 +372,7 @@ django-graphql-bp
         Output:
         - node - User object (with password field excluded) - Usage #1.2.    
         
-    7. Current user query:
+    7. Users query:
         ``` javascript
         query {
           users {

@@ -222,14 +222,15 @@ class Operations:
         is_create = False
         is_update = False
         is_delete = False
+        model = None
 
         @classmethod
-        def get_model_from_input(cls, input: dict, context: WSGIRequest):
-            return None
+        def get_model_from_input(cls, info: ResolveInfo, input: dict) -> models.Model:
+            return cls.model.objects.get(pk=input.get('pk'))
 
         @classmethod
-        def get_model_from_instance(cls, input: dict, context: WSGIRequest):
-            return None
+        def get_model_from_instance(cls, info: ResolveInfo, input: dict) -> models.Model:
+            return cls.get_instance(info, input)
 
         @classmethod
         def check_access(cls, input: dict, context: WSGIRequest):

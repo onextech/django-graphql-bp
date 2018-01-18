@@ -18,14 +18,6 @@ class UserNode(DjangoObjectType):
 
 class UserAccess(Operations.MutationAccess):
     @classmethod
-    def get_model_from_input(cls, info: ResolveInfo, input: dict) -> User:
-        return User.objects.get(pk=input.get('pk'))
-
-    @classmethod
-    def get_model_from_instance(cls, info: ResolveInfo, input: dict) -> User:
-        return cls.get_instance(info, input)
-
-    @classmethod
     def check_user_access(cls, info: ResolveInfo, input: dict, user: User):
         if not user.pk == info.context.user.pk:
             Operations.raise_forbidden_access_error()
