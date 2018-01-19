@@ -162,15 +162,29 @@ class GraphqlTestCase(TestCase):
     def get_user_email(self, username) -> str:
         return settings.TEST_EMAIL_USERNAME + '+' + username + '@' + settings.TEST_EMAIL_DOMAIN
 
-    def create_mutation_success_test(self, model: models.Model, mutation: Mutation, context: HttpRequest = None):
-        count = model.objects.count()
+    def create_mutation_success_test(self, model_class: models.Model, mutation: Mutation, context: HttpRequest = None):
+        count = model_class.objects.count()
 
         if context is None:
             context = self.get_context_value()
 
         result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_mutation_success(result, mutation.get_name())
-        self.assertEqual(model.objects.count(), count + 1, 'Check if ' + model.__name__ + ' has been created')
+        self.assertEqual(
+            model_class.objects.count(), count + 1, 'Check if ' + model_class.__name__ + ' has been created')
+        return result
+
+    def create_mutation_raised_error_test(self, model_class: models.Model, mutation: Mutation, error_message: str,
+                                          context: HttpRequest = None):
+        count = model_class.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
+        self.assert_raised_error(result, error_message)
+        self.assertEqual(
+            model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
         return result
 
     def update_mutation_success_test(self, model_class: models.Model, mutation: Mutation, model: models.Model,
@@ -206,25 +220,43 @@ class GraphqlTestCase(TestCase):
             'Check if ' + model.__class__.__name__ + '.' + attribute + ' has not been updated')
         return result
 
-    def delete_mutation_success_test(self, model: models.Model, mutation: Mutation, context: HttpRequest = None):
-        count = model.objects.count()
+    def delete_mutation_success_test(self, model_class: models.Model, mutation: Mutation, context: HttpRequest = None):
+        count = model_class.objects.count()
 
         if context is None:
             context = self.get_context_value()
 
         result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_mutation_success(result, mutation.get_name())
-        self.assertEqual(model.objects.count(), count - 1, 'Check if ' + model.__name__ + ' has been removed')
+        self.assertEqual(
+            model_class.objects.count(), count - 1, 'Check if ' + model_class.__name__ + ' has been removed')
         return result
 
-    def delete_mutation_raised_error_test(self, model: models.Model, mutation: Mutation, error_message: str,
+    def delete_mutation_raised_error_test(self, model_class: models.Model, mutation: Mutation, error_message: str,
                                           context: HttpRequest = None):
-        count = model.objects.count()
+        count = model_class.objects.count()
 
         if context is None:
             context = self.get_context_value()
 
         result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_raised_error(result, error_message)
-        self.assertEqual(model.objects.count(), count, 'Check if ' + model.__name__ + ' has not been removed')
+        self.assertEqual(
+            model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been removed')
         return result
+
+    def query_raised_error_test(self, query: Query, error_message: str, context: HttpRequest = None):
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=context)
+        self.assert_raised_error(result, error_message)
+
+    def query_collection_success_test(self, query: Query, model_class: models.Model, context: HttpRequest = None):
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(self.get_schema()).execute(query.get_result(), context_value=context)
+        self.assert_operation_no_errors(result)
+        edges = self.get_operation_field_value(result, query.get_name(), 'edges')
+        self.assertEqual(len(edges), model_class.objects.count(), 'Check if query has returned full set.')

@@ -123,20 +123,11 @@ class SchemaTestCase(GraphqlTestCase):
 
     # users query
     def test_users_by_unauthorized_user(self):
-        query = self.get_users_query()
-        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value())
-        self.assert_raised_error(result, self.get_forbidden_access_message())
+        self.query_raised_error_test(self.get_users_query(), self.get_forbidden_access_message())
 
-    # users query
     def test_users_by_not_staff(self):
-        query = self.get_users_query()
-        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value(self.user))
-        self.assert_raised_error(result, self.get_forbidden_access_message())
+        self.query_raised_error_test(
+            self.get_users_query(), self.get_forbidden_access_message(), self.get_context_value(self.user))
 
-    # users query
     def test_users_by_staff(self):
-        query = self.get_users_query()
-        result = Client(self.get_schema()).execute(query.get_result(), context_value=self.get_context_value(self.staff))
-        self.assert_operation_no_errors(result)
-        edges = self.get_operation_field_value(result, query.get_name(), 'edges')
-        self.assertEqual(len(edges), User.objects.count(), 'Check if users query has returned full set.')
+        self.query_collection_success_test(self.get_users_query(), User, self.get_context_value(self.staff))
