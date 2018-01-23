@@ -44,6 +44,9 @@ class Operation:
                 if type(value) is str:
                     value = '"' + value + '"'
 
+                if type(value) is list:
+                    value = str(value).replace('\'', '"')
+
                 result += '    ' + field + ': ' + str(value) + '\n'
 
             result += '  })'
@@ -183,6 +186,19 @@ class GraphqlTestCase(TestCase):
 
         result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
         self.assert_raised_error(result, error_message)
+        self.assertEqual(
+            model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
+        return result
+
+    def create_mutation_validation_error_test(self, model_class: models.Model, mutation: Mutation, field: str,
+                                              error_message: str, context: HttpRequest = None):
+        count = model_class.objects.count()
+
+        if context is None:
+            context = self.get_context_value()
+
+        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=context)
+        self.assert_mutation_validation_error(result, mutation.get_name(), field, error_message)
         self.assertEqual(
             model_class.objects.count(), count, 'Check if ' + model_class.__name__ + ' has not been created')
         return result
