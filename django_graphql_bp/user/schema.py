@@ -1,5 +1,6 @@
 import graphene
-from django_graphql_bp.graphql.utils import DjangoPkInterface, Operations, SearchConnectionField
+from django_graphql_bp.graphql.operations import fields, interfaces, mutations, raise_forbidden_access_error, \
+    raise_unathorized_error
 from django_graphql_bp.user.forms import CreateUserForm, UpdateUserForm
 from django_graphql_bp.user.models import User
 from django.contrib.auth import login, logout
@@ -12,21 +13,21 @@ class UserNode(DjangoObjectType):
     class Meta:
         exclude_fields = ['password']
         filter_fields = ['email', 'is_active']
-        interfaces = (graphene.relay.Node, DjangoPkInterface)
+        interfaces = (graphene.relay.Node, interfaces.DjangoPkInterface)
         model = User
 
 
-class UserAccess(Operations.MutationAccess):
+class UserAccess(mutations.MutationAccess):
     @classmethod
     def check_user_access(cls, info: ResolveInfo, input: dict, user: User):
         if not user.pk == info.context.user.pk:
-            Operations.raise_forbidden_access_error()
+            raise_forbidden_access_error()
 
     @classmethod
     def check_access(cls, info: ResolveInfo, input: dict):
         """ Only authorized user who is in staff or shop staff """
         if not info.context.user.is_authenticated:
-            Operations.raise_unathorized_error()
+            raise_unathorized_error()
 
         if not info.context.user.is_staff:
             if cls.is_create or cls.is_update:
@@ -38,7 +39,7 @@ class UserAccess(Operations.MutationAccess):
                 cls.check_user_access(info, input, user_instance)
 
 
-class CreateUser(Operations.MutationCreate, graphene.relay.ClientIDMutation):
+class CreateUser(mutations.MutationCreate, graphene.relay.ClientIDMutation):
     form = CreateUserForm
     node = graphene.Field(UserNode)
 
@@ -53,7 +54,7 @@ class CreateUser(Operations.MutationCreate, graphene.relay.ClientIDMutation):
         return cls.validation_success(form)
 
 
-class UpdateUser(Operations.MutationUpdate, UserAccess, graphene.relay.ClientIDMutation):
+class UpdateUser(mutations.MutationUpdate, UserAccess, graphene.relay.ClientIDMutation):
     form = UpdateUserForm
     is_update = True
     model = User
@@ -66,7 +67,7 @@ class UpdateUser(Operations.MutationUpdate, UserAccess, graphene.relay.ClientIDM
         name = graphene.String()
 
 
-class DeleteUser(Operations.MutationDelete, UserAccess, graphene.relay.ClientIDMutation):
+class DeleteUser(mutations.MutationDelete, UserAccess, graphene.relay.ClientIDMutation):
     is_delete = True
     model = User
     node = graphene.Field(UserNode)
@@ -80,7 +81,7 @@ class DeleteUser(Operations.MutationDelete, UserAccess, graphene.relay.ClientIDM
         instance.save()
 
 
-class LoginUser(Operations.MutationAbstract, graphene.relay.ClientIDMutation):
+class LoginUser(mutations.MutationAbstract, graphene.relay.ClientIDMutation):
     node = graphene.Field(UserNode)
     validation_errors = graphene.String()
 
@@ -113,7 +114,7 @@ class LoginUser(Operations.MutationAbstract, graphene.relay.ClientIDMutation):
             return cls.validation_error(form)
 
 
-class LogoutUser(Operations.MutationAccess, graphene.relay.ClientIDMutation):
+class LogoutUser(mutations.MutationAccess, graphene.relay.ClientIDMutation):
     node = graphene.Field(UserNode)
     validation_errors = graphene.String()
 
@@ -131,7 +132,7 @@ class LogoutUser(Operations.MutationAccess, graphene.relay.ClientIDMutation):
 
 class Query:
     current_user = graphene.Field(UserNode)
-    users = SearchConnectionField(UserNode)
+    users = fields.SearchConnectionField(UserNode)
 
     def resolve_current_user(self, info: ResolveInfo, **input: dict) -> User:
         return UserNode.get_node(info, info.context.user.id)
