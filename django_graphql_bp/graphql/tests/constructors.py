@@ -31,6 +31,10 @@ class Operation:
 
                 if type(value) is list:
                     value = str(value).replace('\'', '"')
+                    import re
+                    for match in re.findall('(?:{|, )(\".*?\"):', value):
+                        replace = match.replace('"', '')
+                        value = value.replace(match, replace)
 
                 result += '    ' + field + ': ' + str(value) + '\n'
 

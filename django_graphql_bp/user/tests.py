@@ -1,4 +1,4 @@
-from django_graphql_bp.graphql.tests import builders, cases
+from django_graphql_bp.graphql.tests import constructors, cases
 from django_graphql_bp.user.models import User
 from graphene.test import Client
 
@@ -16,8 +16,8 @@ class UserTestCase(cases.OperationTestCase):
 
 
 class CreateUserTestCase(UserTestCase, cases.MutationTestCase):
-    def get_mutation(self) -> builders.Mutation:
-        return builders.Mutation('createUser', {'ok': '', 'validationErrors': ''}, {
+    def get_mutation(self) -> constructors.Mutation:
+        return constructors.Mutation('createUser', {'ok': '', 'validationErrors': ''}, {
             'email': self.get_user_email('createUser'),
             'password1': 'get_create_user_mutation',
             'password2': 'get_create_user_mutation'
@@ -28,8 +28,8 @@ class CreateUserTestCase(UserTestCase, cases.MutationTestCase):
 
 
 class UpdateUserTestCase(UserTestCase, cases.MutationTestCase):
-    def get_mutation(self) -> builders.Mutation:
-        return builders.Mutation('updateUser', {'ok': '', 'validationErrors': ''}, {
+    def get_mutation(self) -> constructors.Mutation:
+        return constructors.Mutation('updateUser', {'ok': '', 'validationErrors': ''}, {
             'pk': self.user.pk,
             'email': self.user.email,
             'name': 'get_create_user_mutation'
@@ -50,8 +50,8 @@ class UpdateUserTestCase(UserTestCase, cases.MutationTestCase):
 
 
 class DeleteUserTestCase(UserTestCase, cases.MutationTestCase):
-    def get_mutation(self) -> builders.Mutation:
-        return builders.Mutation('deleteUser', {'ok': '', 'node': {'isActive': ''}}, {'pk': self.user.pk})
+    def get_mutation(self) -> constructors.Mutation:
+        return constructors.Mutation('deleteUser', {'ok': '', 'node': {'isActive': ''}}, {'pk': self.user.pk})
 
     def test_delete_user_by_unauthorized_user(self):
         self.update_raised_error_test(self.user, 'is_active', self.get_unauthorized_message())
@@ -68,8 +68,8 @@ class DeleteUserTestCase(UserTestCase, cases.MutationTestCase):
 
 
 class LoginUserTestCase(UserTestCase, cases.MutationTestCase):
-    def get_mutation(self) -> builders.Mutation:
-        return builders.Mutation('loginUser', {'ok': ''}, {'email': self.user.email, 'password': 'userpassword'})
+    def get_mutation(self) -> constructors.Mutation:
+        return constructors.Mutation('loginUser', {'ok': ''}, {'email': self.user.email, 'password': 'userpassword'})
 
     def test_log_in(self):
         mutation = self.get_mutation()
@@ -78,8 +78,8 @@ class LoginUserTestCase(UserTestCase, cases.MutationTestCase):
 
 
 class LogoutUserTestCase(UserTestCase, cases.MutationTestCase):
-    def get_mutation(self) -> builders.Mutation:
-        return builders.Mutation('logoutUser', {'ok': ''}, {})
+    def get_mutation(self) -> constructors.Mutation:
+        return constructors.Mutation('logoutUser', {'ok': ''}, {})
 
     def test_logout_in(self):
         mutation = self.get_mutation()
@@ -89,8 +89,8 @@ class LogoutUserTestCase(UserTestCase, cases.MutationTestCase):
 
 
 class CurrentUserTestCase(UserTestCase, cases.QueryTestCase):
-    def get_query(self) -> builders.Query:
-        return builders.Query('currentUser', {'pk': ''})
+    def get_query(self) -> constructors.Query:
+        return constructors.Query('currentUser', {'pk': ''})
 
     def test_current_user_by_unauthorized_user(self):
         query = self.get_query()
@@ -107,8 +107,8 @@ class CurrentUserTestCase(UserTestCase, cases.QueryTestCase):
 
 
 class UsersTestCase(UserTestCase, cases.QueryTestCase):
-    def get_query(self) -> builders.Query:
-        return builders.Query('users', {
+    def get_query(self) -> constructors.Query:
+        return constructors.Query('users', {
             'edges': {
                 'node': {
                     'pk': ''

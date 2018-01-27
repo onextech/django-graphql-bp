@@ -1,7 +1,7 @@
 import json, random
 from django_graphql_bp.graphql.api import schema
 from django_graphql_bp.graphql.operations import FORBIDDEN_ACCESS_ERROR, UNAUTHORIZED_ERROR
-from django_graphql_bp.graphql.tests import builders
+from django_graphql_bp.graphql.tests import constructors
 from django_graphql_bp.user.forms import CreateUserForm
 from django_graphql_bp.user.models import User
 from django.conf import settings
@@ -116,7 +116,7 @@ class MutationTestCase(OperationTestCase):
             json.loads(errors)[field_name][0]['message'],
             error_message, 'Check if "' + error_message + '" among validation errors')
 
-    def get_mutation(self, **kwargs: dict) -> builders.Mutation:
+    def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         raise NotImplementedError('Function get_mutation for MutationTestCase class should be implemented.')
 
     def get_node_attribute_value(self, result: dict, attribute_name: str):
@@ -210,7 +210,7 @@ class QueryTestCase(OperationTestCase):
         edges = self.get_operation_field_value(result, self.get_query().get_name(), 'edges')
         self.assertEqual(len(edges), self.model_class.objects.count(), 'Check if query has returned full set.')
 
-    def get_query(self, **kwargs: dict) -> builders.Query:
+    def get_query(self, **kwargs: dict) -> constructors.Query:
         raise NotImplementedError('Function get_query for QueryTestCase class should be implemented.')
 
     def raised_error_test(self, error_message: str, context: HttpRequest = None, args: dict = None):
