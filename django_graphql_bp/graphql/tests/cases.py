@@ -203,12 +203,15 @@ class QueryTestCase(OperationTestCase):
             self.get_operation_field_value(result, operation_name, field_name), value,
             'Check if data.' + field_name + ' = ' + str(value))
 
-    def collection_success_test(self, context: HttpRequest = None, args: dict = None):
+    def collection_success_test(self, context: HttpRequest = None, expected_count: int = None, args: dict = None):
+        if expected_count is None:
+            expected_count = self.model_class.objects.count()
+
         context, args = self.get_data(context, args)
         result = Client(self.get_schema()).execute(self.get_query(**args).get_result(), context_value=context)
         self.assert_operation_no_errors(result)
         edges = self.get_operation_field_value(result, self.get_query().get_name(), 'edges')
-        self.assertEqual(len(edges), self.model_class.objects.count(), 'Check if query has returned full set.')
+        self.assertEqual(len(edges), expected_count, 'Check if query has returned full set.')
 
     def get_query(self, **kwargs: dict) -> constructors.Query:
         raise NotImplementedError('Function get_query for QueryTestCase class should be implemented.')
