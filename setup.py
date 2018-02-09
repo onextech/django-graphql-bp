@@ -21,6 +21,7 @@ setup(
         'django>=2.0',
         'django-filter>=1.1',
         'graphene-django>=2.0',
+        'pillow>=5.0',
         'psycopg2>=2.7'
     ],
     python_requires='>=3'

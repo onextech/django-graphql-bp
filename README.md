@@ -152,11 +152,11 @@ django-graphql-bp
     
     ``` python
     from app.graphql.api import schema
-    from django_graphql_bp.user.tests import SchemaTestCase as UserSchemaTestCase
+    from django_graphql_bp.user.tests import *
     from graphene import Schema
     
     
-    class SchemaTestCase(UserSchemaTestCase):
+    class GraphqlTestCase(cases.OperationTestCase):
         def get_schema(self) -> Schema:
             return schema
     ```
