@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django_graphql_bp',
-    version='1.1.1',
+    version='1.2.0',
     description='Boiler plate for API projects based on Django 2 &amp; graphql (graphene) 2',
     url='https://github.com/onextech/django-graphql-bp',
     author='Artsem Stalavitski',
@@ -18,8 +18,11 @@ setup(
     keywords='django graphene graphql boilerplate crud user authentication',
     packages=find_packages(),
     install_requires=[
+        'boto3>=1.5',
         'django>=2.0',
         'django-filter>=1.1',
+        'django-storages>=1.6',
+        'django-uuid-upload-path>=1.0',
         'graphene-django>=2.0',
         'pillow>=5.0',
         'psycopg2>=2.7'

@@ -25,7 +25,7 @@ class UserAccess(mutations.MutationAccess):
 
     @classmethod
     def check_access(cls, info: ResolveInfo, input: dict):
-        """ Only authorized user who is in staff or shop staff """
+        """ Only authorized user who is in staff or owner """
         if not info.context.user.is_authenticated:
             raise_unathorized_error()
 
@@ -141,7 +141,7 @@ class Query:
         if info.context.user.is_staff:
             return User.objects.all()
 
-        raise PermissionError('403 Forbidden Access')
+        raise_forbidden_access_error()
 
 
 class Mutation:
