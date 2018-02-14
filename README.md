@@ -50,7 +50,7 @@ django-graphql-bp
     TEST_EMAIL_DOMAIN = os.environ.get('TEST_EMAIL_DOMAIN')
     ```
 
-3) Custom user model:
+3) User app:
 
     In config file:
 
@@ -61,12 +61,25 @@ django-graphql-bp
         ...
     ]
     
-    # custom User model
+    # Custom User model
     AUTH_USER_MODEL = 'user.User'
     ```
-    **This User model will be used instead of standard django.contrib.auth.models.User**
+    **This User model will be used instead of standard django.contrib.auth.models.User.**
     
-4) Graphql:
+4) Article app (optional):
+    In config file:
+
+    ``` python
+    INSTALLED_APPS = [
+        ...
+        'django_graphql_bp.article',
+        ...
+    ]
+    ```
+    **Configure it only if willing to use article app's featurues.**
+
+    
+5) Graphql:
 
     In config file:
     
@@ -85,6 +98,30 @@ django-graphql-bp
     }
     ```
     
+6) AWS S3 storage (optional):
+
+    Environment variables:
+    - AWS_ACCESS_KEY_ID - [Access Key ID from AWS ](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys);
+    - AWS_SECRET_ACCESS_KEY - [Secret Access Key from AWS ](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys);
+    - AWS_STORAGE_BUCKET_NAME - name of backet in AWS S3 account;
+    - AWS_MEDIA_BUCKET_NAME - name of backet in AWS S3 account;
+    - AWS_QUERYSTRING_AUTH - set string 'False' to override default.
+
+    In config file:
+    
+    ``` python
+    # Amazon S3 configuration
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_MEDIA_BUCKET_NAME = os.environ.get('AWS_MEDIA_BUCKET_NAME')
+    AWS_QUERYSTRING_AUTH = ast.literal_eval(os.environ.get('AWS_QUERYSTRING_AUTH'))
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    
+    # Django file storage
+    DEFAULT_FILE_STORAGE = 'django_graphql_bp.core.storages.S3MediaStorage'
+    ```
+    
 
 ---
 
@@ -99,9 +136,11 @@ django-graphql-bp
     Or add django-graphql-bp package to your requirements and run from there.
     **If you are using virtual environment, make sure that you are activated it before run.**
     Package will install following packages:
+    - boto3 1.5+
     - django 2.0+
     - django-filter 1.1+
     - graphene-django 2.0+
+    - pillow 5.0+
     - psycopg2 2.7+
     
 2) Database migrations:
@@ -130,40 +169,42 @@ django-graphql-bp
     
     ``` python
     import graphene
-    from django_graphql_bp.graphql.api import UserQueries, UserMutations
-
-
-    class Queries(UserQueries):
+    import django_graphql_bp.article.schema # required to use article operations
+    import django_graphql_bp.user.schema
+    
+    
+    class Queries(
+        django_graphql_bp.article.schema.Query, # required to use article queries
+        django_graphql_bp.user.schema.Query,
+        graphene.ObjectType
+    ):
         pass
-
-
-    class Mutations(UserMutations):
+    
+    
+    class Mutations(
+        django_graphql_bp.article.schema.Mutation, # required to use article mutations
+        django_graphql_bp.user.schema.Mutation,
+        graphene.ObjectType
+    ):
         pass
-
+    
+    
     schema = graphene.Schema(query=Queries, mutation=Mutations)
     ```
 
-    *Location of api.py file has been set up at Configuration #4*
+    *Location of api.py file has been set up at Configuration #5*
 
-5) Tests:
+5) Tests
+    To enable tests for all User's and Article's operations from package.
+test.py example:
 
-    To enable tests for all User's operations from package need to create extend UserSchemaTestCase in tests.py file.
-    test.py example:
-    
     ``` python
-    from app.graphql.api import schema
-    from django_graphql_bp.user.tests import SchemaTestCase as UserSchemaTestCase
-    from graphene import Schema
-    
-    
-    class SchemaTestCase(UserSchemaTestCase):
-        def get_schema(self) -> Schema:
-            return schema
+    from django_graphql_bp.article.tests import * # to enable Article tests
+    from django_graphql_bp.user.tests import * # to enable User tests
     ```
     
     *get_schema allow tests use Schema from application instead of Schema from package*
     
-
 # Usage
 1) Common:
 

@@ -1,15 +1,15 @@
 import json, random
-from django_graphql_bp.graphql.api import schema
 from django_graphql_bp.graphql.operations import FORBIDDEN_ACCESS_ERROR, UNAUTHORIZED_ERROR
 from django_graphql_bp.graphql.tests import constructors
 from django_graphql_bp.user.forms import CreateUserForm
 from django_graphql_bp.user.models import User
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
-from django.core.files.uploadedfile import UploadedFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
 from django.http import HttpRequest
 from django.test import TestCase
+from django.utils.module_loading import import_string
 from graphene import Schema
 from graphene.test import Client
 
@@ -45,7 +45,7 @@ class OperationTestCase(TestCase):
     def get_context_value(self, user=AnonymousUser(), files=None) -> HttpRequest:
         """
         :type user: User | AnonymousUser
-        :param files: Filename of file from saleor.graphql.test_files folder e.g. "members_sheet.csv"
+        :param files: {key => name of file from settings.TEST_FILES_FOLDER folder)} e.g. {'image': 'picture.png'}
         :type files: dict | None
         """
         if files is None:
@@ -55,10 +55,11 @@ class OperationTestCase(TestCase):
         context.user = user
         context.FILES = {}
 
-        test_files_folder = settings.PROJECT_ROOT + '/saleor/graphql/test_files/'
+        test_files_folder = settings.PROJECT_ROOT + '/' + settings.TEST_FILES_FOLDER + '/'
 
         for key, file in files.items():
-            context.FILES.update({key: UploadedFile(open(test_files_folder + file, 'rb'))})
+            file = open(test_files_folder + file, 'rb')
+            context.FILES.update({key: SimpleUploadedFile(file.name, file.read())})
 
         return context
 
@@ -78,7 +79,7 @@ class OperationTestCase(TestCase):
         return int(round(random.uniform(1, 10)))
 
     def get_schema(self) -> Schema:
-        return schema
+        return import_string(settings.GRAPHENE['SCHEMA'])
 
     def get_unauthorized_message(self) -> str:
         return UNAUTHORIZED_ERROR

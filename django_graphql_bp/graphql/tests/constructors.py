@@ -28,8 +28,9 @@ class Operation:
             for field, value in self.input.items():
                 if type(value) is str:
                     value = '"' + value + '"'
-
-                if type(value) is list:
+                elif type(value) is bool:
+                    value = str(value).lower()
+                elif type(value) is list:
                     value = str(value).replace('\'', '"')
                     import re
                     for match in re.findall('(?:{|, )(\".*?\"):', value):

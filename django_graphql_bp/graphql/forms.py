@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.forms.fields import FileField
 
 
@@ -13,6 +14,9 @@ class UpdateForm(forms.ModelForm):
 
                 if not value:
                     value = getattr(self.instance, name)
+
+                    if isinstance(value, models.Model):
+                        value = value.pk
 
             try:
                 if isinstance(field, FileField):

@@ -47,6 +47,15 @@ class SearchConnectionField(DjangoFilterConnectionField):
             type, fields, None, extra_filter_meta, filterset_class, *args, **kwargs)
 
     @classmethod
+    def apply_filters(cls, args: dict, qs: QuerySet) -> QuerySet:
+        pk = args.get('pk', None)
+
+        if pk:
+            qs = qs.filter(pk=pk)
+
+        return qs
+
+    @classmethod
     def apply_search(cls, args: dict, qs: QuerySet, search_vector_class: ConnectionSearchVector) -> QuerySet:
         query = args.get('query', '')
 
@@ -68,6 +77,7 @@ class SearchConnectionField(DjangoFilterConnectionField):
     def connection_resolver(cls, resolver, connection, default_manager, max_limit, enforce_first_or_last,
                             filterset_class, filtering_args, search_vector_class, root, info, **args):
         qs = cls.get_query_set(args, default_manager, filterset_class, filtering_args)
+        qs = cls.apply_filters(args, qs)
         qs = cls.apply_search(args, qs, search_vector_class)
         qs = cls.apply_sort(args, qs)
         return super(DjangoFilterConnectionField, cls).connection_resolver(
