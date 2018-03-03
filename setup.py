@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django_graphql_bp',
-    version='1.2.1',
+    version='1.2.2',
     description='Boiler plate for API projects based on Django 2 &amp; graphql (graphene) 2',
     url='https://github.com/onextech/django-graphql-bp',
     author='Artsem Stalavitski',
