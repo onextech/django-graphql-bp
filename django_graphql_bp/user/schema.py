@@ -18,6 +18,8 @@ class UserNode(DjangoObjectType):
 
 
 class UserAccess(mutations.MutationAccess):
+    model = User
+
     @classmethod
     def check_user_access(cls, info: ResolveInfo, input: dict, user: User):
         if not user.pk == info.context.user.pk:

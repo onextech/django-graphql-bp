@@ -73,8 +73,8 @@ class OperationTestCase(TestCase):
     def get_operation_field_value(self, result: dict, operation_name: str, attribute_name: str):
         return result['data'][operation_name][attribute_name]
 
-    def get_random_price(self) -> str:
-        return str(round(random.uniform(0.01, 9.99), 2))
+    def get_random_price(self) -> float:
+        return float(round(random.uniform(0.01, 9.99), 2))
 
     def get_random_qunatity(self) -> int:
         return int(round(random.uniform(1, 10)))
