@@ -1,3 +1,4 @@
+from autoslug import AutoSlugField
 from django.db import models
 from django.template.defaultfilters import slugify
 from uuid_upload_path import upload_to
@@ -9,7 +10,7 @@ class Article(models.Model):
     is_active = models.BooleanField(default=True)
     last_modified = models.DateTimeField(auto_now=True)
     pub_date = models.DateTimeField(auto_now_add=True)
-    slug = models.SlugField()
+    slug = AutoSlugField(always_update=True, populate_from='title', unique=True, unique_with='title')
     subtitle = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
 

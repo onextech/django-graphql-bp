@@ -1,11 +1,14 @@
 django-graphql-bp
 =======
+
 ##### Boiler plate for API projects based on Django 2 &amp; graphql (graphene) 2
+---
 
 # Requirments
 - python: 3.5+
 - pip: 9.0+
 - postgress: 9.5+
+---
 
 # Configuration
 ##### Settings and Environment variables
@@ -121,8 +124,6 @@ django-graphql-bp
     # Django file storage
     DEFAULT_FILE_STORAGE = 'django_graphql_bp.core.storages.S3MediaStorage'
     ```
-    
-
 ---
 
 # Installation
@@ -204,7 +205,8 @@ test.py example:
     ```
     
     *get_schema allow tests use Schema from application instead of Schema from package*
-    
+---
+
 # Usage
 1) Common:
 

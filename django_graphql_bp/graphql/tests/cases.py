@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import models
+from django.db.models.fields.files import ImageFieldFile
 from django.http import HttpRequest
 from django.test import TestCase
 from django.utils.module_loading import import_string
@@ -72,8 +73,8 @@ class OperationTestCase(TestCase):
     def get_operation_field_value(self, result: dict, operation_name: str, attribute_name: str):
         return result['data'][operation_name][attribute_name]
 
-    def get_random_price(self) -> str:
-        return str(round(random.uniform(0.01, 9.99), 2))
+    def get_random_price(self) -> float:
+        return float(round(random.uniform(0.01, 9.99), 2))
 
     def get_random_qunatity(self) -> int:
         return int(round(random.uniform(1, 10)))
@@ -117,12 +118,6 @@ class MutationTestCase(OperationTestCase):
             json.loads(errors)[field_name][0]['message'],
             error_message, 'Check if "' + error_message + '" among validation errors')
 
-    def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
-        raise NotImplementedError('Function get_mutation for MutationTestCase class should be implemented.')
-
-    def get_node_attribute_value(self, result: dict, attribute_name: str):
-        return self.get_operation_field_value(result, self.get_mutation().get_name(), 'node')[attribute_name]
-
     def create_success_test(self, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
         context, args = self.get_data(context, args)
@@ -141,7 +136,7 @@ class MutationTestCase(OperationTestCase):
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
         return result
 
-    def create_validation_error_test(self, field: str, error_message: str, context: HttpRequest = None, 
+    def create_validation_error_test(self, field: str, error_message: str, context: HttpRequest = None,
                                      args: dict = None):
         count = self.model_class.objects.count()
         context, args = self.get_data(context, args)
@@ -149,32 +144,6 @@ class MutationTestCase(OperationTestCase):
         self.assert_validation_error(result, field, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
-        return result
-
-    def update_success_test(self, model: models.Model, attribute: str, context: HttpRequest = None, args: dict = None):
-        count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
-        self.assert_success(result)
-        self.assertEqual(
-            self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
-        self.assertNotEqual(
-            getattr(self.model_class.objects.get(pk=model.pk), attribute),
-            getattr(model, attribute), 'Check if ' + model.__class__.__name__ + '.' + attribute + ' has been updated')
-        return result
-
-    def update_raised_error_test(self, model: models.Model, attribute: str, error_message: str,
-                                 context: HttpRequest = None, args: dict = None):
-        count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
-        self.assert_raised_error(result, error_message)
-        self.assertEqual(
-            self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
-        self.assertEqual(
-            getattr(self.model_class.objects.get(pk=model.pk), attribute),
-            getattr(model, attribute),
-            'Check if ' + model.__class__.__name__ + '.' + attribute + ' has not been updated')
         return result
 
     def delete_success_test(self, context: HttpRequest = None, args: dict = None):
@@ -193,6 +162,47 @@ class MutationTestCase(OperationTestCase):
         self.assert_raised_error(result, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been removed')
+        return result
+
+    def get_attribute_value(self, model: models.Model, attribute: str):
+        value = getattr(model, attribute)
+
+        if type(value) is ImageFieldFile:
+            value = str(value)
+
+        return value
+
+    def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
+        raise NotImplementedError('Function get_mutation for MutationTestCase class should be implemented.')
+
+    def get_node_attribute_value(self, result: dict, attribute_name: str):
+        return self.get_operation_field_value(result, self.get_mutation().get_name(), 'node')[attribute_name]
+
+    def update_success_test(self, model: models.Model, attribute: str, context: HttpRequest = None, args: dict = None):
+        count = self.model_class.objects.count()
+        context, args = self.get_data(context, args)
+        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        self.assert_success(result)
+        self.assertEqual(
+            self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
+        self.assertNotEqual(
+            self.get_attribute_value(self.model_class.objects.get(pk=model.pk), attribute),
+            self.get_attribute_value(model, attribute),
+            'Check if ' + model.__class__.__name__ + '.' + attribute + ' has been updated')
+        return result
+
+    def update_raised_error_test(self, model: models.Model, attribute: str, error_message: str,
+                                 context: HttpRequest = None, args: dict = None):
+        count = self.model_class.objects.count()
+        context, args = self.get_data(context, args)
+        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        self.assert_raised_error(result, error_message)
+        self.assertEqual(
+            self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
+        self.assertEqual(
+            self.get_attribute_value(self.model_class.objects.get(pk=model.pk), attribute),
+            self.get_attribute_value(model, attribute),
+            'Check if ' + model.__class__.__name__ + '.' + attribute + ' has not been updated')
         return result
 
 

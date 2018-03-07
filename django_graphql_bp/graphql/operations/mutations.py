@@ -173,10 +173,7 @@ class MutationDelete(MutationAbstract):
         return cls.model.objects.get(pk=input.get('pk'))
 
     @classmethod
-    def after_delete(cls, info: ResolveInfo, input: dict, instance: models.Model):
-        """
-        :rtype: Operations.MutationDelete
-        """
+    def after_delete(cls, info: ResolveInfo, input: dict, instance: models.Model) -> 'MutationDelete':
         return cls(ok=True, pk=input.get('pk'), node=instance)
 
     @classmethod
