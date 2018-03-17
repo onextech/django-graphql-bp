@@ -1,4 +1,6 @@
-import graphene, re
+import graphene
+import json
+import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -17,11 +19,11 @@ class MutationAbstract:
         pass
 
     @classmethod
-    def get_context_file_by_name(cls, context: WSGIRequest, name: str) -> InMemoryUploadedFile:
-        files = cls.get_context_files_by_name(context, name)
+    def get_context_file_by_name(cls, info: ResolveInfo, name: str) -> InMemoryUploadedFile:
+        files = cls.get_context_files_by_name(info.context, name)
 
         if not len(files):
-            raise PermissionError('Spreadsheet file should be posted under "{}" name.'.format(name))
+            raise PermissionError('File should be posted under "{}" name.'.format(name))
 
         return files.pop()
 
@@ -99,7 +101,7 @@ class MutationCreate(MutationAbstract):
 
     @classmethod
     def validation_error(cls, form: forms.ModelForm) -> 'MutationCreate':
-        return cls(ok=False, node=form.instance, validation_errors=form.errors.as_json())
+        return cls(ok=False, node=form.instance, validation_errors=json.dumps(form.errors))
 
     @classmethod
     def validation_success(cls, form: forms.ModelForm) -> 'MutationCreate':

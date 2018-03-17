@@ -16,7 +16,7 @@ class UpdateForm(forms.ModelForm):
         else:
             value = field.widget.value_from_datadict(self.data, self.files, self.add_prefix(name))
 
-            if not value:
+            if value not in [False, []] and not value:
                 if isinstance(field, ModelMultipleChoiceField):
                     # if value is belongs to m2m relation field
                     if not self.instance.pk:

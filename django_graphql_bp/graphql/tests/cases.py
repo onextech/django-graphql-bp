@@ -92,16 +92,6 @@ class OperationTestCase(TestCase):
 class MutationTestCase(OperationTestCase):
     model_class = None  # implement to use CRUD tests
 
-    def assert_multiple_validation_error(self, result: dict, field_name: str, error_message: str):
-        self.assert_operation_no_errors(result)
-        self.assertFalse(
-            self.get_operation_field_value(result, self.get_mutation().get_name(), 'ok'),
-            'Check if mutation returned ok = False')
-        errors = self.get_operation_field_value(result, self.get_mutation().get_name(), 'validationErrors')
-        self.assertEqual(
-            json.loads(errors)[field_name][0], error_message,
-            'Check if "' + error_message + '" among validation errors')
-
     def assert_success(self, result: dict):
         self.assert_operation_no_errors(result)
         self.assertTrue(
@@ -113,10 +103,9 @@ class MutationTestCase(OperationTestCase):
         self.assertFalse(
             self.get_operation_field_value(result, self.get_mutation().get_name(), 'ok'),
             'Check if mutation returned ok = False')
-        errors = self.get_operation_field_value(result, self.get_mutation().get_name(), 'validationErrors')
-        self.assertEqual(
-            json.loads(errors)[field_name][0]['message'],
-            error_message, 'Check if "' + error_message + '" among validation errors')
+        errors_json = self.get_operation_field_value(result, self.get_mutation().get_name(), 'validationErrors')
+        error = json.loads(errors_json)[field_name].pop()
+        self.assertEqual(error, error_message, 'Check if "' + error_message + '" among validation errors')
 
     def create_success_test(self, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
@@ -197,6 +186,20 @@ class MutationTestCase(OperationTestCase):
         context, args = self.get_data(context, args)
         result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
         self.assert_raised_error(result, error_message)
+        self.assertEqual(
+            self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
+        self.assertEqual(
+            self.get_attribute_value(self.model_class.objects.get(pk=model.pk), attribute),
+            self.get_attribute_value(model, attribute),
+            'Check if ' + model.__class__.__name__ + '.' + attribute + ' has not been updated')
+        return result
+
+    def update_validation_error_test(self, model: models.Model, attribute: str, field: str, error_message: str,
+                                     context: HttpRequest = None, args: dict = None):
+        count = self.model_class.objects.count()
+        context, args = self.get_data(context, args)
+        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        self.assert_validation_error(result, field, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
         self.assertEqual(
