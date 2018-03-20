@@ -47,6 +47,10 @@ class SearchConnectionField(DjangoFilterConnectionField):
             type, fields, None, extra_filter_meta, filterset_class, *args, **kwargs)
 
     @classmethod
+    def apply_additional_conditions(cls, args: dict, qs: QuerySet) -> QuerySet:
+        return qs
+
+    @classmethod
     def apply_filters(cls, args: dict, qs: QuerySet) -> QuerySet:
         pk = args.get('pk', None)
 
@@ -80,6 +84,7 @@ class SearchConnectionField(DjangoFilterConnectionField):
         qs = cls.apply_filters(args, qs)
         qs = cls.apply_search(args, qs, search_vector_class)
         qs = cls.apply_sort(args, qs)
+        qs = cls.apply_additional_conditions(args, qs)
         return super(DjangoFilterConnectionField, cls).connection_resolver(
             resolver, connection, qs, max_limit, enforce_first_or_last, root, info, **args)
 

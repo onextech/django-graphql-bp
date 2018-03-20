@@ -1,22 +1,12 @@
 import graphene
+from graphql.execution.base import ResolveInfo
 
 
-def countable_connection_for_type(_type):
-    """
-    Implements totalCount field via Relay's built-in connections
-    https://github.com/graphql-python/graphene-django/issues/162
-    :param _type:
-    :return:
-    """
+class CountableConnection(graphene.Connection):
+    total_count = graphene.Int()
 
-    class Connection(graphene.Connection):
-        total_count = graphene.Int()
+    class Meta:
+        abstract = True
 
-        class Meta:
-            name = _type._meta.name + 'Connection'
-            node = _type
-
-        def resolve_total_count(self, args, context, info):
-            return self.length
-
-    return Connection
+    def resolve_total_count(self, info: ResolveInfo, **input: dict):
+        return self.iterable.count()
