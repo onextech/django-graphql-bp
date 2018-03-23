@@ -69,23 +69,35 @@ class DeleteUserTestCase(UserTestCase, cases.MutationTestCase):
 
 class LoginUserTestCase(UserTestCase, cases.MutationTestCase):
     def get_mutation(self) -> constructors.Mutation:
-        return constructors.Mutation('loginUser', {'ok': ''}, {'email': self.user.email, 'password': 'userpassword'})
+        return constructors.Mutation('loginUser', {
+            'node': {
+                'pk': ''
+            },
+            'ok': ''
+        }, {
+            'email': self.user.email,
+            'password': 'userpassword'
+        })
 
     def test_log_in(self):
-        mutation = self.get_mutation()
-        result = Client(self.get_schema()).execute(mutation.get_result(), context_value=self.get_context_value())
-        # TODO cannot test sessions with graphql schema?
+        result = self.get_mutation_result(self.get_context_value(), {})
+        self.assert_success(result)
+        self.assertEqual(self.user.pk, self.get_node_attribute_value(result, 'pk'), 'Check if user is logged in')
 
 
 class LogoutUserTestCase(UserTestCase, cases.MutationTestCase):
     def get_mutation(self) -> constructors.Mutation:
-        return constructors.Mutation('logoutUser', {'ok': ''}, {})
+        return constructors.Mutation('logoutUser', {
+            'node': {
+                'pk': ''
+            },
+            'ok': ''
+        }, {})
 
-    def test_logout_in(self):
-        mutation = self.get_mutation()
-        result = Client(
-            self.get_schema()).execute(mutation.get_result(), context_value=self.get_context_value(self.user))
-        # TODO cannot test sessions with graphql schema?
+    def test_log_out(self):
+        result = self.get_mutation_result(self.get_context_value(self.user), {})
+        self.assert_success(result)
+        self.assertEqual(self.user.pk, self.get_node_attribute_value(result, 'pk'), 'Check if user is logged out')
 
 
 class CurrentUserTestCase(UserTestCase, cases.QueryTestCase):

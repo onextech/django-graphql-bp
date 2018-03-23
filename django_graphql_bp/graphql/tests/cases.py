@@ -13,6 +13,7 @@ from django.test import TestCase
 from django.utils.module_loading import import_string
 from graphene import Schema
 from graphene.test import Client
+from importlib import import_module
 
 
 class OperationTestCase(TestCase):
@@ -43,18 +44,25 @@ class OperationTestCase(TestCase):
         form.save()
         return form.instance
 
-    def get_context_value(self, user=AnonymousUser(), files=None) -> HttpRequest:
+    def get_context_value(self, user=AnonymousUser(), files=None, session=None) -> HttpRequest:
         """
         :type user: User | AnonymousUser
         :param files: {key => name of file from settings.TEST_FILES_FOLDER folder)} e.g. {'image': 'picture.png'}
         :type files: dict | None
+        :param session: {key => value, } e.g. {'image': 'picture.png'}
+        :type session: dict | None
         """
         if files is None:
             files = {}
 
+        if session is None:
+            session = {}
+
         context = HttpRequest()
         context.user = user
         context.FILES = {}
+        context.session = import_module(settings.SESSION_ENGINE).SessionStore(None)
+        context.session.update(session)
 
         test_files_folder = settings.PROJECT_ROOT + '/' + settings.TEST_FILES_FOLDER + '/'
 
@@ -109,8 +117,7 @@ class MutationTestCase(OperationTestCase):
 
     def create_success_test(self, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_success(result)
         self.assertEqual(
             self.model_class.objects.count(), count + 1, 'Check if ' + self.model_class.__name__ + ' has been created')
@@ -118,8 +125,7 @@ class MutationTestCase(OperationTestCase):
 
     def create_raised_error_test(self, error_message: str, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_raised_error(result, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
@@ -128,8 +134,7 @@ class MutationTestCase(OperationTestCase):
     def create_validation_error_test(self, field: str, error_message: str, context: HttpRequest = None,
                                      args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_validation_error(result, field, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
@@ -137,8 +142,7 @@ class MutationTestCase(OperationTestCase):
 
     def delete_success_test(self, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_success(result)
         self.assertEqual(
             self.model_class.objects.count(), count - 1, 'Check if ' + self.model_class.__name__ + ' has been removed')
@@ -146,8 +150,7 @@ class MutationTestCase(OperationTestCase):
 
     def delete_raised_error_test(self, error_message: str, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_raised_error(result, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been removed')
@@ -164,13 +167,16 @@ class MutationTestCase(OperationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         raise NotImplementedError('Function get_mutation for MutationTestCase class should be implemented.')
 
+    def get_mutation_result(self, context: HttpRequest, args: dict) -> {}:
+        context, args = self.get_data(context, args)
+        return Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+
     def get_node_attribute_value(self, result: dict, attribute_name: str):
         return self.get_operation_field_value(result, self.get_mutation().get_name(), 'node')[attribute_name]
 
     def update_success_test(self, model: models.Model, attribute: str, context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_success(result)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
@@ -183,8 +189,7 @@ class MutationTestCase(OperationTestCase):
     def update_raised_error_test(self, model: models.Model, attribute: str, error_message: str,
                                  context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_raised_error(result, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
@@ -197,8 +202,7 @@ class MutationTestCase(OperationTestCase):
     def update_validation_error_test(self, model: models.Model, attribute: str, field: str, error_message: str,
                                      context: HttpRequest = None, args: dict = None):
         count = self.model_class.objects.count()
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
+        result = self.get_mutation_result(context, args)
         self.assert_validation_error(result, field, error_message)
         self.assertEqual(
             self.model_class.objects.count(), count, 'Check if ' + self.model_class.__name__ + ' has not been created')
@@ -221,8 +225,7 @@ class QueryTestCase(OperationTestCase):
         if expected_count is None:
             expected_count = self.model_class.objects.count()
 
-        context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_query(**args).get_result(), context_value=context)
+        result = self.get_query_result(context, args)
         self.assert_operation_no_errors(result)
         edges = self.get_operation_field_value(result, self.get_query().get_name(), 'edges')
         self.assertEqual(len(edges), expected_count, 'Check if query has returned full set.')
@@ -230,7 +233,10 @@ class QueryTestCase(OperationTestCase):
     def get_query(self, **kwargs: dict) -> constructors.Query:
         raise NotImplementedError('Function get_query for QueryTestCase class should be implemented.')
 
-    def raised_error_test(self, error_message: str, context: HttpRequest = None, args: dict = None):
+    def get_query_result(self, context: HttpRequest, args: dict) -> {}:
         context, args = self.get_data(context, args)
-        result = Client(self.get_schema()).execute(self.get_query(**args).get_result(), context_value=context)
+        return Client(self.get_schema()).execute(self.get_query(**args).get_result(), context_value=context)
+
+    def raised_error_test(self, error_message: str, context: HttpRequest = None, args: dict = None):
+        result = self.get_query_result(context, args)
         self.assert_raised_error(result, error_message)
