@@ -167,6 +167,15 @@ class MutationTestCase(OperationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         raise NotImplementedError('Function get_mutation for MutationTestCase class should be implemented.')
 
+    def get_mutation_input(self, arguments: dict) -> {}:
+        input = {}
+
+        for field, value in arguments.items():
+            if value is not None:
+                input.update({field: value})
+
+        return input
+
     def get_mutation_result(self, context: HttpRequest, args: dict) -> {}:
         context, args = self.get_data(context, args)
         return Client(self.get_schema()).execute(self.get_mutation(**args).get_result(), context_value=context)
