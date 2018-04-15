@@ -56,10 +56,9 @@ class CreateUser(mutations.MutationCreate, graphene.relay.ClientIDMutation):
         return cls.validation_success(form)
 
 
-class UpdateUser(mutations.MutationUpdate, UserAccess, graphene.relay.ClientIDMutation):
+class UpdateUser(UserAccess, mutations.MutationUpdate, graphene.relay.ClientIDMutation):
     form = UpdateUserForm
     is_update = True
-    model = User
     node = graphene.Field(UserNode)
 
     class Input:
@@ -69,9 +68,8 @@ class UpdateUser(mutations.MutationUpdate, UserAccess, graphene.relay.ClientIDMu
         name = graphene.String()
 
 
-class DeleteUser(mutations.MutationDelete, UserAccess, graphene.relay.ClientIDMutation):
+class DeleteUser(UserAccess, mutations.MutationDelete, graphene.relay.ClientIDMutation):
     is_delete = True
-    model = User
     node = graphene.Field(UserNode)
 
     class Input:

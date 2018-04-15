@@ -16,7 +16,8 @@ class UpdateForm(forms.ModelForm):
         else:
             value = field.widget.value_from_datadict(self.data, self.files, self.add_prefix(name))
 
-            if value not in [False, []] and not value:
+            if (not issubclass(field.__class__, FileField)) and name not in self.data.keys():
+                # set previous or default value if field is not a file and new value wasn't submitted
                 if isinstance(field, ModelMultipleChoiceField):
                     # if value is belongs to m2m relation field
                     if not self.instance.pk:
@@ -25,7 +26,8 @@ class UpdateForm(forms.ModelForm):
                         value = getattr(self.instance, name)
                         value = value.all().values_list('pk', flat=True)
                 else:
-                    value = getattr(self.instance, name)
+                    if hasattr(self.instance, name):
+                        value = getattr(self.instance, name)
 
                 if isinstance(value, models.Model):
                     value = value.pk
@@ -34,7 +36,7 @@ class UpdateForm(forms.ModelForm):
 
     def validate_field(self, field, name: str, value):
         try:
-            if isinstance(field, FileField):
+            if issubclass(field.__class__, FileField):
                 initial = self.get_initial_for_field(field, name)
                 value = field.clean(value, initial)
             else:

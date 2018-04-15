@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
+from django_graphql_bp.core.helpers import ObjectHelper
 from django_graphql_bp.graphql.operations import raise_forbidden_access_error, raise_unathorized_error
 from graphql.execution.base import ResolveInfo
 
@@ -70,6 +71,10 @@ class MutationAbstract:
 
 
 class MutationAccess(MutationAbstract):
+    input_access = None
+    input_attribute = 'pk'
+    input_model = None
+    instance_access = None
     is_create = False
     is_update = False
     is_delete = False
@@ -77,11 +82,22 @@ class MutationAccess(MutationAbstract):
 
     @classmethod
     def get_model_from_input(cls, info: ResolveInfo, input: dict) -> models.Model:
-        return cls.model.objects.get(pk=input.get('pk'))
+        input_value = input.get(cls.input_attribute)
+        model_class = cls.model
+
+        if cls.input_model is not None:
+            model_class = cls.input_model
+
+        if cls.is_update and not input_value:
+            model = cls.get_model_from_instance(info, input)
+        else:
+            model = ObjectHelper.multi_getattr(model_class.objects.get(pk=input_value), cls.input_access)
+
+        return model
 
     @classmethod
     def get_model_from_instance(cls, info: ResolveInfo, input: dict) -> models.Model:
-        return cls.get_instance(info, input)
+        return ObjectHelper.multi_getattr(cls.get_instance(info, input), cls.instance_access)
 
     @classmethod
     def check_access(cls, info: ResolveInfo, input: dict):
