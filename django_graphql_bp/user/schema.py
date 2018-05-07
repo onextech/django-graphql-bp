@@ -1,20 +1,12 @@
 import graphene
-from django_graphql_bp.graphql.operations import fields, interfaces, mutations, raise_forbidden_access_error, \
+from django_graphql_bp.core.imports import UserNode
+from django_graphql_bp.graphql.operations import fields, mutations, raise_forbidden_access_error, \
     raise_unathorized_error
 from django_graphql_bp.user.forms import CreateUserForm, UpdateUserForm
 from django_graphql_bp.user.models import User
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from graphene_django import DjangoObjectType
 from graphql.execution.base import ResolveInfo
-
-
-class UserNode(DjangoObjectType):
-    class Meta:
-        exclude_fields = ['password']
-        filter_fields = ['email', 'is_active']
-        interfaces = (graphene.relay.Node, interfaces.DjangoPkInterface)
-        model = User
 
 
 class UserAccess(mutations.MutationAccess):
@@ -135,7 +127,7 @@ class Query:
     users = fields.SearchConnectionField(UserNode)
 
     def resolve_current_user(self, info: ResolveInfo, **input: dict) -> User:
-        return UserNode.get_node(info, info.context.user.id)
+        return info.context.user
 
     def resolve_users(self, info: ResolveInfo, **input: dict) -> [User]:
         if info.context.user.is_staff:

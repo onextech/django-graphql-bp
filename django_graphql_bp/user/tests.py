@@ -17,11 +17,11 @@ class UserTestCase(cases.OperationTestCase):
 
 class CreateUserTestCase(UserTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
-        return constructors.Mutation('createUser', {'ok': '', 'validationErrors': ''}, self.get_mutation_input({
+        return constructors.Mutation('createUser', {'ok': '', 'validationErrors': ''}, {
             'email': kwargs.get('email', self.get_user_email('createUser')),
             'password1': kwargs.get('password1', 'create_user_test_case'),
             'password2': kwargs.get('password2', 'create_user_test_case')
-        }))
+        })
 
     def test_create_user(self):
         self.create_success_test()
@@ -29,10 +29,10 @@ class CreateUserTestCase(UserTestCase, cases.MutationTestCase):
 
 class UpdateUserTestCase(UserTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
-        return constructors.Mutation('updateUser', {'ok': '', 'validationErrors': ''}, self.get_mutation_input({
+        return constructors.Mutation('updateUser', {'ok': '', 'validationErrors': ''}, {
             'name': kwargs.get('name', 'UpdateUserTestCase'),
             'pk': kwargs.get('pk', self.user.pk)
-        }))
+        })
 
     def test_update_user_by_unauthorized_user(self):
         self.update_raised_error_test(self.user, 'name', self.get_unauthorized_message())
@@ -52,7 +52,7 @@ class DeleteUserTestCase(UserTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         return constructors.Mutation(
             'deleteUser', {'ok': '', 'node': {'isActive': ''}},
-            self.get_mutation_input({'pk': kwargs.get('pk', self.user.pk)}))
+            {'pk': kwargs.get('pk', self.user.pk)})
 
     def test_delete_user_by_unauthorized_user(self):
         self.update_raised_error_test(self.user, 'is_active', self.get_unauthorized_message())
@@ -75,10 +75,10 @@ class LoginUserTestCase(UserTestCase, cases.MutationTestCase):
                 'pk': ''
             },
             'ok': ''
-        }, self.get_mutation_input({
+        }, {
             'email': kwargs.get('email', self.user.email),
             'password': kwargs.get('password', 'userpassword')
-        }))
+        })
 
     def test_log_in(self):
         result = self.get_mutation_result(self.get_context_value(), {})
@@ -93,7 +93,7 @@ class LogoutUserTestCase(UserTestCase, cases.MutationTestCase):
                 'pk': ''
             },
             'ok': ''
-        }, self.get_mutation_input({}))
+        }, {})
 
     def test_log_out(self):
         result = self.get_mutation_result(self.get_context_value(self.user), {})

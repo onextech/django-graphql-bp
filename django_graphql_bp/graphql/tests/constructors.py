@@ -6,26 +6,14 @@ class Operation:
         self.output = output
         self.input = input
 
-    def get_output_result(self, output, spaces: int = 2) -> str:
-        result = ' { \n'
-        spaces_string = ' ' * spaces
-
-        for field, value in output.items():
-            if type(value) is dict:
-                result += spaces_string + '  ' + field + self.get_output_result(value, spaces + 2)
-            else:
-                result += spaces_string + '  ' + field + '\n'
-
-        result += spaces_string + '} \n'
-        return result
-
     def get_input_result(self) -> str:
         result = ''
 
         if self.input is not None:
+            input = self.get_clean_input()
             result += '(input: { \n'
 
-            for field, value in self.input.items():
+            for field, value in input.items():
                 if type(value) is str:
                     value = '"' + value + '"'
                 elif type(value) is bool:
@@ -43,8 +31,30 @@ class Operation:
 
         return result
 
+    def get_clean_input(self) -> {}:
+        input = {}
+
+        for field, value in self.input.items():
+            if value is not None:
+                input.update({field: value})
+
+        return input
+
     def get_name(self) -> str:
         return self.name
+
+    def get_output_result(self, output, spaces: int = 2) -> str:
+        result = ' { \n'
+        spaces_string = ' ' * spaces
+
+        for field, value in output.items():
+            if type(value) is dict:
+                result += spaces_string + '  ' + field + self.get_output_result(value, spaces + 2)
+            else:
+                result += spaces_string + '  ' + field + '\n'
+
+        result += spaces_string + '} \n'
+        return result
 
     def get_result(self) -> str:
         result = self.type + ' ' + self.name + ' { \n'

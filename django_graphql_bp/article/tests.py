@@ -21,11 +21,11 @@ class ArticleImageTestCase(_BaseArticleTestCase):
 
 class CreateArticleTestCase(ArticleTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
-        return constructors.Mutation('createArticle', {'ok': '', 'validationErrors': ''}, self.get_mutation_input({
+        return constructors.Mutation('createArticle', {'ok': '', 'validationErrors': ''}, {
             'content': kwargs.get('content', 'CreateArticleTestCase'),
             'subtitle': kwargs.get('subtitle', 'CreateArticleTestCase'),
             'title': kwargs.get('title', 'CreateArticleTestCase')
-        }))
+        })
 
     def test_create_article_by_unauthorized_user(self):
         self.create_raised_error_test(self.get_unauthorized_message())
@@ -39,12 +39,12 @@ class CreateArticleTestCase(ArticleTestCase, cases.MutationTestCase):
 
 class UpdateArticleTestCase(ArticleTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
-        return constructors.Mutation('updateArticle', {'ok': '', 'validationErrors': ''}, self.get_mutation_input({
+        return constructors.Mutation('updateArticle', {'ok': '', 'validationErrors': ''}, {
             'content': kwargs.get('content'),
             'pk': kwargs.get('pk', self.article.pk),
             'subtitle': kwargs.get('subtitle'),
             'title': kwargs.get('title', 'UpdateArticleTestCase')
-        }))
+        })
 
     def test_update_article_by_unauthorized_user(self):
         self.update_raised_error_test(self.article, 'title', self.get_unauthorized_message())
@@ -60,7 +60,7 @@ class UpdateArticleTestCase(ArticleTestCase, cases.MutationTestCase):
 class DeleteArticleTestCase(ArticleTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         return constructors.Mutation(
-            'deleteArticle', {'ok': ''}, self.get_mutation_input({'pk': kwargs.get('pk', self.article.pk)}))
+            'deleteArticle', {'ok': ''}, {'pk': kwargs.get('pk', self.article.pk)})
 
     def test_delete_article_by_unauthorized_user(self):
         self.delete_raised_error_test(self.get_unauthorized_message())
@@ -76,7 +76,7 @@ class CreateArticleImageTestCase(ArticleImageTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         return constructors.Mutation(
             'createArticleImage', {'ok': '', 'validationErrors': ''},
-            self.get_mutation_input({'article': kwargs.get('article', self.article.pk)}))
+            {'article': kwargs.get('article', self.article.pk)})
 
     def test_create_article_image_by_unauthorized_user(self):
         self.create_raised_error_test(
@@ -92,11 +92,11 @@ class CreateArticleImageTestCase(ArticleImageTestCase, cases.MutationTestCase):
 
 class UpdateArticleImageTestCase(ArticleImageTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
-        return constructors.Mutation('updateArticleImage', {'ok': '', 'validationErrors': ''}, self.get_mutation_input({
+        return constructors.Mutation('updateArticleImage', {'ok': '', 'validationErrors': ''}, {
             'article': kwargs.get('article'),
             'isFeatured': kwargs.get('is_featured', True),
             'pk': kwargs.get('pk', self.article_image.pk)
-        }))
+        })
 
     def test_update_article_image_by_unauthorized_user(self):
         self.update_raised_error_test(
@@ -116,7 +116,7 @@ class UpdateArticleImageTestCase(ArticleImageTestCase, cases.MutationTestCase):
 class DeleteArticleImageTestCase(ArticleImageTestCase, cases.MutationTestCase):
     def get_mutation(self, **kwargs: dict) -> constructors.Mutation:
         return constructors.Mutation(
-            'deleteArticleImage', {'ok': ''}, self.get_mutation_input({'pk': kwargs.get('pk', self.article_image.pk)}))
+            'deleteArticleImage', {'ok': ''}, {'pk': kwargs.get('pk', self.article_image.pk)})
 
     def test_delete_article_image_by_unauthorized_user(self):
         self.delete_raised_error_test(self.get_unauthorized_message())
