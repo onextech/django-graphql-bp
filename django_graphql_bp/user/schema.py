@@ -124,7 +124,7 @@ class LogoutUser(mutations.MutationAccess, graphene.relay.ClientIDMutation):
 
 class Query:
     current_user = graphene.Field(UserNode)
-    users = fields.SearchConnectionField(UserNode)
+    users = fields.SearchConnectionField(UserNode, sort=graphene.Argument(graphene.String))
 
     def resolve_current_user(self, info: ResolveInfo, **input: dict) -> User:
         return info.context.user

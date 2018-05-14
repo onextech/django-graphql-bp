@@ -1,6 +1,6 @@
 import graphene
 from django import forms
-from django_graphql_bp.graphql.operations import fields, interfaces, mutations
+from django_graphql_bp.graphql.operations import connections, fields, interfaces, mutations
 from django_graphql_bp.article.forms import ArticleForm, ArticleImageForm
 from django_graphql_bp.article.models import Article, ArticleImage
 from graphene_django import DjangoObjectType
@@ -9,6 +9,7 @@ from graphql.execution.base import ResolveInfo
 
 class ArticleNode(DjangoObjectType):
     class Meta:
+        connection_class = connections.CountableConnection
         filter_fields = ['is_active', 'slug']
         interfaces = (graphene.relay.Node, interfaces.DjangoPkInterface)
         model = Article
@@ -94,7 +95,7 @@ class DeleteArticleImage(mutations.MutationAccess, mutations.MutationDelete, gra
 
 
 class Query:
-    articles = fields.SearchConnectionField(ArticleNode, pk=graphene.Int())
+    articles = fields.SearchConnectionField(ArticleNode, pk=graphene.Int(), sort=graphene.Argument(graphene.String))
 
 
 class Mutation:
